@@ -24,7 +24,6 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work ;
 use work.utils_pack.all ;
-use work.bus_pack.all ;
 
 
 --! peripheral with fifo interface to the logic

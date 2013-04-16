@@ -145,3 +145,82 @@ data_bus_out <= data_bus_out_t when be0n = '1' and be1n = '1' else
 
 end RTL ;
 
+
+
+-- should fix all fifo related problems ...
+architecture RTL_v2 of muxed_addr_interface is
+signal latch_addr, wrt, rdt, cst : std_logic ;
+signal ub_old, lb_old, data_rdy : std_logic ;
+signal data_bus_out_t, temp_data	: std_logic_vector((DATA_WIDTH - 1) downto 0);
+begin
+
+latch_addr <= '1' when csn = '0' and addr_en_n = '0' and wrn = '1' and oen = '1' else
+				   '0' ;
+					
+add_latch0 : generic_latch 
+	 generic map(NBIT => ADDR_WIDTH)
+    Port map( clk => clk ,
+           resetn => resetn ,
+           sraz => '0' ,
+           en => latch_addr,
+           d => data((ADDR_WIDTH - 1) downto 0),
+           q => addr_bus);
+
+process(clk, resetn)
+begin
+if resetn ='0' then
+	wrt <= '0' ;
+	rdt <= '0' ;
+	data_bus_out_t <= (others => 'Z');
+elsif clk'event and clk ='1' then
+	wrt <= (NOT wrn) and (NOT csn) and (NOT latch_addr) ;
+	rdt <= (NOT oen) and (NOT csn)  and (NOT latch_addr) ;
+	if latch_addr = '0' and wrn = '0' and csn = '0' then
+		data_bus_out_t <= data ;
+	end if ;
+end if ;
+end process;
+
+wr <= (wrt and data_rdy) ;
+rd <=  rdt ;
+
+data <= data_bus_in when (oen = '0' and csn = '0') else
+		  (others => 'Z');
+
+process(clk, resetn)
+begin
+if resetn ='0' then
+	ub_old<= '0' ;
+	lb_old <= '0' ;
+	temp_data <= (others => '0') ;
+elsif clk'event and clk ='1' then
+	if wrn = '0' then
+		if be0n = be1n then
+			temp_data  <= (others => '0');
+			lb_old <= '0' ;
+			ub_old <= '0' ;
+		elsif be0n = '0' and be1n = '1' then
+			temp_data(7 downto 0) <= data(7 downto 0);
+			lb_old <= '1' ;
+			ub_old <= '0' ;
+		elsif be0n = '1' and be1n = '0' then
+			temp_data(15 downto 8) <= data(15 downto 8); 
+			ub_old <= '1' ;
+			lb_old <= '0' ;
+		end if ;
+	end if;
+end if ;
+end process;
+
+data_rdy <= '1' when be0n = be1n else
+				'1' when ub_old = '1'  and be0n = '0' else
+				'1' when lb_old = '1'  and  be1n = '0'  else
+				'0' ;
+
+
+data_bus_out <= temp_data when data_rdy = '1' and  (ub_old = '1' or lb_old = '1') else
+					 data_bus_out_t;
+
+
+end RTL_v2 ;
+

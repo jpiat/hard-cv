@@ -35,6 +35,8 @@ USE WORK.utils_pack.ALL ;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
+
+-- clk must at least 4x faster than pixel clock
 entity sobel3x3 is
 generic(WIDTH: natural := 640;
 		  HEIGHT: natural := 480);

@@ -22,7 +22,6 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 library work ;
 use work.utils_pack.all ;
-use work.bus_pack.all ;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
