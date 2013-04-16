@@ -192,30 +192,40 @@ begin
 if resetn ='0' then
 	ub_old<= '0' ;
 	lb_old <= '0' ;
+	data_rdy <= '0' ;
 	temp_data <= (others => '0') ;
 elsif clk'event and clk ='1' then
 	if wrn = '0' then
 		if be0n = be1n then
 			temp_data  <= (others => '0');
-			lb_old <= '0' ;
-			ub_old <= '0' ;
-		elsif be0n = '0' and be1n = '1' then
-			temp_data(7 downto 0) <= data(7 downto 0);
-			lb_old <= '1' ;
-			ub_old <= '0' ;
 		elsif be0n = '1' and be1n = '0' then
+			--temp_data(7 downto 0) <= data(7 downto 0);
 			temp_data(15 downto 8) <= data(15 downto 8); 
-			ub_old <= '1' ;
+		elsif be0n = '0' and be1n = '1' then
+			--temp_data(15 downto 8) <= data(15 downto 8); 
+			temp_data(7 downto 0) <= data(7 downto 0);
+		end if ;
+		
+		if be0n = be1n then
 			lb_old <= '0' ;
+			ub_old <= '0' ;
+			data_rdy <= '1' ;
+		elsif ub_old = '1' and be0n = '0' then
+			data_rdy <= '1' ;
+		elsif lb_old = '1' and be1n = '0' then 
+			data_rdy <= '1' ;
+		elsif be0n = '1' and be1n = '0' then
+			lb_old <= '0' ;
+			ub_old <= '1' ;
+			data_rdy <= '0' ;
+		elsif be0n = '0' and be1n = '1' then
+			ub_old <= '0' ;
+			lb_old <= '1' ;
+			data_rdy <= '0' ;
 		end if ;
 	end if;
 end if ;
 end process;
-
-data_rdy <= '1' when be0n = be1n else
-				'1' when ub_old = '1'  and be0n = '0' else
-				'1' when lb_old = '1'  and  be1n = '0'  else
-				'0' ;
 
 
 data_bus_out <= temp_data when data_rdy = '1' and  (ub_old = '1' or lb_old = '1') else
