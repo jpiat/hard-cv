@@ -36,10 +36,10 @@ use work.utils_pack.all ;
 
 --This component generates the addr/data bus from spi commands
 -- communication is made in 16 bit per word in mode 0 at max speed 50Mhz (for now)
--- The first writtent by is interprated as follow:
+-- The first written byte is interprated as follow:
 -- [15 : 3] 14 bit bus address
--- [1] : one if read, zero if write 
--- [0] : on for auto increment address, zero otherwise
+-- [1] : on for auto increment address, zero otherwise
+-- [0] : one if read, zero if write
 entity spi2ad_bus is
 generic(ADDR_WIDTH : positive := 16 ; DATA_WIDTH : positive := 16 ; BIG_ENDIAN : boolean := true);
 port(clk, resetn : in std_logic ;
@@ -81,15 +81,20 @@ process(sck, ss)
 begin
 if ss = '1' then
 	data_out_sr <= (others => '0') ;
-elsif sck'event and sck = '0' then
-	data_out_sr(15 downto 1) <= data_out_sr(14 downto 0) ;
-	data_out_sr(0) <= '0' ;
+--elsif sck'event and sck = '0' then
+elsif sck'event and sck = '1' then
 	if bit_count = 0 then
-		data_out_sr <= data_out_temp ;
+		data_out_sr(15 downto 1) <= data_out_temp(14 downto 0) ;
+		data_out_sr(0) <= '0' ;
+	else
+		data_out_sr(15 downto 1) <= data_out_sr(14 downto 0) ;
+		data_out_sr(0) <= '0' ;
 	end if ;
 end if ;
 end process ;
-miso <= data_out_sr(15);
+
+miso <= data_out_temp(15) when  bit_count = 0 else 
+		  data_out_sr(15);
 
 
 process(sck, ss)
@@ -157,14 +162,15 @@ end generate ;
 process(clk, resetn)
 begin
 	if resetn = '0' then
-		addr_bus <= (others => '0');
+		--addr_bus <= (others => '0');
 		wr <= '0' ;
 		rd <= '0' ;
 	elsif clk'event and clk = '1' then
-		addr_bus <= addr_bus_latched ;
+		--addr_bus <= addr_bus_latched ;
 		wr <= wr_latched ;
 		rd <= rd_latched ;
 	end if ;
 end process ;
+addr_bus <= addr_bus_latched ;
 
 end RTL ;
