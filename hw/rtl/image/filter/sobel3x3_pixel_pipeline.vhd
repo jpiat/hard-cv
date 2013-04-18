@@ -36,8 +36,8 @@ USE WORK.utils_pack.ALL ;
 --use UNISIM.VComponents.all;
 
 entity sobel3x3_pixel_pipeline is
-generic(WIDTH: natural := 640;
-		  HEIGHT: natural := 480);
+generic(WIDTH: natural := 320;
+		  HEIGHT: natural := 240);
 port(
  		resetn : in std_logic; 
  		pixel_clock, hsync, vsync : in std_logic; 
@@ -88,13 +88,24 @@ begin
 		x_mult_scal(1, 1) <= -SHIFT_LEFT(resize(block3x3_sig(1,2), 16),1);
 		x_mult_scal(1, 2) <= -resize(block3x3_sig(2,2), 16);
 				
-		y_add_vec(0) <= y_mult_scal(0, 0) + y_mult_scal(1, 0) ;
-		y_add_vec(1) <=  y_mult_scal(0, 1) + y_mult_scal(1, 1) ;
-		y_add_vec(2) <=  y_mult_scal(0, 2) + y_mult_scal(1, 2) ;
-		
-		x_add_vec(0) <= x_mult_scal(0, 0) + x_mult_scal(1, 0) ;
-		x_add_vec(1) <= x_mult_scal(0, 1) + x_mult_scal(1, 1) ;
-		x_add_vec(2) <= x_mult_scal(0, 2) + x_mult_scal(1, 2) ;
+	process(pixel_clock, resetn)
+		begin
+			if resetn = '0' then		
+				y_add_vec(0) <= (others => '0') ;
+				y_add_vec(1) <=  (others => '0') ;
+				y_add_vec(2) <=  (others => '0') ;
+				x_add_vec(0) <= (others => '0') ;
+				x_add_vec(1) <=(others => '0') ;
+				x_add_vec(2) <= (others => '0') ;
+			elsif pixel_clock'event and pixel_clock = '1' then	
+				y_add_vec(0) <= y_mult_scal(0, 0) + y_mult_scal(1, 0) ;
+				y_add_vec(1) <=  y_mult_scal(0, 1) + y_mult_scal(1, 1) ;
+				y_add_vec(2) <=  y_mult_scal(0, 2) + y_mult_scal(1, 2) ;
+				x_add_vec(0) <= x_mult_scal(0, 0) + x_mult_scal(1, 0) ;
+				x_add_vec(1) <= x_mult_scal(0, 1) + x_mult_scal(1, 1) ;
+				x_add_vec(2) <= x_mult_scal(0, 2) + x_mult_scal(1, 2) ;
+			end if ;
+		end process ;
 		
 		process(pixel_clock, resetn)
 		begin
@@ -160,7 +171,7 @@ begin
 		y_grad <= raw_from_conv2_latched(10 downto 3) ;
 		
 		delay_sync: generic_delay
-		generic map( WIDTH =>  2 , DELAY => 4)
+		generic map( WIDTH =>  2 , DELAY => 5)
 		port map(
 			clk => (pixel_clock), resetn => resetn ,
 			input(0) => hsync ,

@@ -174,7 +174,7 @@ pixel_counter0: simple_counter
 delay_sync_signals: generic_latch
 			  generic map(NBIT => 2)
 			  port map(
-				clk => (not pixel_clock) ,
+				clk => (pixel_clock) ,
 				resetn =>resetn ,
 				sraz => '0' ,
 				en => '1',
@@ -197,25 +197,37 @@ line_counter0: simple_counter
 			Q => nb_line
 			);
 
-block_out(0,0) <= block3x3(0,0) when pixel_counterq > 2 and nb_line > 1 else
-						 (others => '0');
-block_out(0,1) <= block3x3(0,1) when pixel_counterq > 1 and nb_line > 1 else
-						(others => '0');
-block_out(0,2) <= block3x3(0,2) when nb_line > 1 else 
-						(others => '0');
-						
-block_out(1,0) <= block3x3(1,0) when pixel_counterq > 2 and nb_line > 0 else
-						 (others => '0');
-block_out(1,1) <= block3x3(1,1) when pixel_counterq > 1 and nb_line > 0 else
-						(others => '0');
-block_out(1,2) <= block3x3(1,2) when nb_line > 0 else 
-						(others => '0');
+--block_out(0,0) <= block3x3(0,0) when pixel_counterq > 2 and nb_line > 1 else
+--						 (others => '0');
+--block_out(0,1) <= block3x3(0,1) when pixel_counterq > 1 and nb_line > 1 else
+--						(others => '0');
+--block_out(0,2) <= block3x3(0,2) when nb_line > 1 else 
+--						(others => '0');
+--						
+--block_out(1,0) <= block3x3(1,0) when pixel_counterq > 2 and nb_line > 0 else
+--						 (others => '0');
+--block_out(1,1) <= block3x3(1,1) when pixel_counterq > 1 and nb_line > 0 else
+--						(others => '0');
+--block_out(1,2) <= block3x3(1,2) when nb_line > 0 else 
+--						(others => '0');
+--
+--block_out(2,0) <= block3x3(2,0) when pixel_counterq > 2 else
+--						 (others => '0');
+--block_out(2,1) <= block3x3(2,1) when pixel_counterq > 1  else
+--						(others => '0');
+--
+--block_out(2,2) <= block3x3(2,2) ;
 
-block_out(2,0) <= block3x3(2,0) when pixel_counterq > 2 else
-						 (others => '0');
-block_out(2,1) <= block3x3(2,1) when pixel_counterq > 1  else
-						(others => '0');
 
+
+block_out(0,0) <= block3x3(0,0);
+block_out(0,1) <= block3x3(0,1) ;
+block_out(0,2) <= block3x3(0,2)  ;
+block_out(1,0) <= block3x3(1,0) ;
+block_out(1,1) <= block3x3(1,1);
+block_out(1,2) <= block3x3(1,2) ;
+block_out(2,0) <= block3x3(2,0) ;
+block_out(2,1) <= block3x3(2,1) ;
 block_out(2,2) <= block3x3(2,2) ;
 
 end Behavioral;
