@@ -401,7 +401,7 @@ end ov7670_vga ;
 
 architecture ov7725_qvga of yuv_register_rom is
  
-	type array_73 is array (0 to 72) of std_logic_vector(15 downto 0 ); 
+	type array_73 is array (0 to 73) of std_logic_vector(15 downto 0 ); 
 	
 	
 	-- CONFIGURATION TAKEN FROM ov534.c IN LINUX KERNEL DRIVERS
@@ -475,6 +475,7 @@ architecture ov7725_qvga of yuv_register_rom is
 	--( X"11" & X"02"), -- should work for 50fps fint = 24 * (4/(3*2)) = 16mhz
 	( X"0c" & X"d0"),
 	( X"64" & X"ff"),
+	( X"69" & X"5c"),
 	( X"0d" & X"41"),
 	( X"14" & X"41"),
 	( X"0e" & X"cd"),

@@ -21,6 +21,9 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
+
+library work ;
+use work.utils_pack.all ;
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --use IEEE.NUMERIC_STD.ALL;
@@ -31,22 +34,23 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 --use UNISIM.VComponents.all;
 
 entity pwm is
-
+generic(NB_CHANNEL : positive := 1);
 port(
 	clk, resetn : in std_logic ;
 	divider : in std_logic_vector(15 downto 0);
 	period : in std_logic_vector(15 downto 0);
-	pulse_width : in std_logic_vector(15 downto 0);
-	pwm : out std_logic 
+	pulse_width : in slv16_array(0 to NB_CHANNEL-1) ;
+	pwm : out std_logic_vector(0 to NB_CHANNEL-1) 
 );
 end pwm;
 
 architecture Behavioral of pwm is
  signal end_div : std_logic ;
  signal divider_counter, period_counter: std_logic_vector(15 downto 0);
- signal period_q, pulse_width_q : std_logic_vector(15 downto 0);
+ signal period_q : std_logic_vector(15 downto 0);
+ signal pulse_width_q : slv16_array(0 to NB_CHANNEL-1);
  signal en_period_count : std_logic ;
- signal pwm_d : std_logic ;
+ signal pwm_d : std_logic_vector(0 to NB_CHANNEL-1) ;
 begin
 
 process(clk, resetn)
@@ -54,7 +58,7 @@ begin
 	if resetn = '0' then	
 		divider_counter <= divider ;
 	elsif clk'event and clk = '1' then
-		if divider_counter = divider then
+		if divider_counter = 0 then
 			divider_counter <= divider ;
 		else
 			divider_counter <= divider_counter - 1 ;
@@ -93,17 +97,18 @@ begin
 	end if ;
 end process ;
 
-pwm_d <= '1' when period_counter < pulse_width_q else
-			'0' ;
-
-process(clk, resetn)
-begin
-	if resetn = '0' then	
-		pwm <= '0';
-	elsif clk'event and clk = '1' then
-		pwm <= pwm_d ;
-	end if ;
-end process ;
+gen_outs : for i in 0 to NB_CHANNEL-1 generate
+	pwm_d(i) <= '1' when period_counter < pulse_width_q(i) else
+				   '0' ;
+	process(clk, resetn)
+	begin
+		if resetn = '0' then	
+			pwm(i) <= '0';
+		elsif clk'event and clk = '1' then
+			pwm(i) <= pwm_d(i) ;
+		end if ;
+	end process ;
+end generate ;
 
 
 end Behavioral;

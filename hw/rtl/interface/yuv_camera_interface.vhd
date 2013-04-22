@@ -21,13 +21,14 @@ entity yuv_camera_interface is
 end yuv_camera_interface;
 
 architecture systemc of yuv_camera_interface is
-	TYPE pixel_state IS (WAIT_LINE, Y1, U1, Y2, V1) ; 
 	
-	signal pix_state : pixel_state ; 
-	signal next_state : pixel_state ; 
 	signal pxclk_old, pxclk_rising_edge, pxclk_falling_edge, nclk : std_logic ;
-	signal en_ylatch, en_ulatch, en_vlatch : std_logic ;
+	signal en_ylatch, en_ulatch, en_vlatch, en_dec_uv : std_logic ;
 	signal hsynct, vsynct, pxclkt, pixel_clock_out_t  : std_logic ;
+	signal vsync_d, href_d : std_logic ;
+	signal y_data_a, y_data_b : std_logic_vector(7 downto 0);
+	signal u_data_a : std_logic_vector(7 downto 0);
+	signal v_data_a : std_logic_vector(7 downto 0);
 	
 	
 	signal pclk_set, pclk_reset, first_pixeln : std_logic ;
@@ -44,6 +45,24 @@ y_latch : generic_latch
            sraz => '0' ,
            en => en_ylatch ,
            d => pixel_data , 
+           q => y_data_a);
+			  
+y_latch_b : generic_latch 
+	 generic map( NBIT => 8)
+    port map( clk =>pxclk,
+           resetn => resetn ,
+           sraz => '0' ,
+           en => en_ylatch ,
+           d => y_data_a , 
+           q => y_data_b);
+			  
+y_latch_c : generic_latch 
+	 generic map( NBIT => 8)
+    port map( clk =>pxclk,
+           resetn => resetn ,
+           sraz => '0' ,
+           en => en_ylatch ,
+           d => y_data_b , 
            q => y_data);
 			  
 u_latch : generic_latch 
@@ -53,16 +72,44 @@ u_latch : generic_latch
            sraz => '0' ,
            en => en_ulatch ,
            d => pixel_data , 
+           q => u_data_a);
+			  
+u_latch_b : generic_latch 
+	 generic map( NBIT => 8)
+    port map( clk => pxclk,
+           resetn => resetn ,
+           sraz => '0' ,
+           en => en_dec_uv ,
+           d => u_data_a , 
            q => u_data);
 
-v_latch : generic_latch 
+v_latch_a : generic_latch 
 	 generic map( NBIT => 8)
     port map( clk => pxclk,
            resetn => resetn ,
            sraz => '0' ,
            en => en_vlatch ,
            d => pixel_data , 
+           q => v_data_a);
+			  
+v_latch : generic_latch 
+	 generic map( NBIT => 8)
+    port map( clk => pxclk,
+           resetn => resetn ,
+           sraz => '0' ,
+           en => en_dec_uv ,
+           d => v_data_a , 
            q => v_data);
+
+	delay_sync : generic_delay
+		generic map( WIDTH => 2, DELAY => 3)
+		port map(
+			clk => pxclk, resetn => resetn,
+			input(0) => href ,
+			input(1) => vsync ,
+			output(0) => href_d,
+			output(1) => vsync_d
+		);		
 
 	process(clock, resetn)
 		 begin
@@ -72,8 +119,8 @@ v_latch : generic_latch
 				pxclkt <= '0' ;
 				pixel_clock_out_t <= '0' ;
 		 	elsif  clock'event and clock = '1'  then
-				hsynct <= NOT href ; -- changing href into hsync
-				vsynct <= vsync ;
+				hsynct <= NOT href_d ; -- changing href into hsync
+				vsynct <= vsync_d ;
 				pxclkt <= pxclk ;
 				pixel_clock_out_t <= cpt_nb_pixel(0) ;
 			end if ;
@@ -113,10 +160,15 @@ pixel_counter : simple_counter
 	 with cpt_nb_pixel select
 		en_vlatch <=  '1' when "11"  ,
 						  '0' when others ;
+						  
+	 with cpt_nb_pixel select
+		en_dec_uv <=  '1' when "00"  ,
+						  '0' when others ;
+
 
 	
-    hsync_out <= hsynct ;--AND (NOT pixel_clock_out_t) ;	
-	 vsync_out <= vsynct ;--AND (NOT pixel_clock_out_t);
+    hsync_out <= hsynct ;
+	 vsync_out <= vsynct ;
 	 pixel_clock_out <= pixel_clock_out_t ;
 						  
 end systemc ;

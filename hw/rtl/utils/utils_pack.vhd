@@ -23,6 +23,7 @@ function count_ones(slv : std_logic_vector) return natural;
 
 -- types declaration
 type slv8_array is array (natural range <>) of std_logic_vector(7 downto 0);
+type slv16_array is array (natural range <>) of std_logic_vector(15 downto 0);
 
 component simple_counter is
 	 generic(NBIT : positive := 4);
@@ -187,6 +188,18 @@ port(clk, resetn : in std_logic ;
 	  data_in : in std_logic_vector( WIDTH-1 downto 0);
 	  data_out : out std_logic_vector(WIDTH-1 downto 0)
 	  );
+end component;
+
+
+component pwm is
+generic(NB_CHANNEL : positive := 1);
+port(
+	clk, resetn : in std_logic ;
+	divider : in std_logic_vector(15 downto 0);
+	period : in std_logic_vector(15 downto 0);
+	pulse_width : in slv16_array(0 to NB_CHANNEL-1) ;
+	pwm : out std_logic_vector(0 to NB_CHANNEL-1) 
+);
 end component;
 
 end utils_pack;
