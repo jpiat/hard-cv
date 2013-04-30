@@ -11,7 +11,13 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 
+library work;
+use work.image_pack.all;
+
 package filter_pack is
+
+
+type binary_block_array is array(0 to 255) of bmatNM(0 to 3, 0 to 3) ;
 
 component dilate3x3 is
 generic(INVERT : natural := 0; 
@@ -128,7 +134,21 @@ port(
 );
 end component;
 
+component threshold_decomposition is
+generic(N : positive := 3);
+port(	block_in : in matNM(0 to (N-1), 0 to (N-1)); 
+		blocks_out : out binary_block_array
+		);
+end component;
 
+component binary_filter is
+generic(N : positive := 3);
+port(
+	blocks_in : in binary_block_array;
+	coeffs_in : in binary_block_array;
+	pixel_out : out std_logic_vector(7 downto 0)
+	);
+end component;
 
 end filter_pack;
 
