@@ -29,6 +29,7 @@ type FRAME_FORMAT is (VGA, QVGA);
 type CAMERA_TYPE is (OV7670, OV7725);
 type matNM is array (natural range<>, natural range<>) of signed(8 downto 0);
 type imatNM is array (natural range<>, natural range<>) of integer range -256 to 255;
+type bmatNM is array (natural range<>, natural range<>) of std_logic;
 type row3 is array (0 to 2) of signed(8 downto 0);
 type mat3 is array (0 to 2) of row3;
 type irow3 is array (0 to 2) of integer range -256 to 255;
