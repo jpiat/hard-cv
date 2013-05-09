@@ -59,6 +59,7 @@ signal rd_falling_edge, wr_falling_edge : std_logic ;
 signal en_available_counter, up_downn_available_counter : std_logic ;
 signal en_free_counter, up_downn_free_counter, counter_load : std_logic ;
 
+signal fifo_wr, fifo_rd : std_logic ; 
 
 begin
 
@@ -85,15 +86,14 @@ gen_async_rd : if NOT SYNC_RD generate
 			rd_old <= rd ;
 		end if ;
 	end process ;
-	rd_rising_edge <= (rd AND (NOT rd_old));
 	rd_falling_edge <= ((NOT rd) AND rd_old);
+	fifo_rd <= rd_falling_edge ;
 	rd_addr_adv <= rd_addr ;
 end generate ;
 
 gen_sync_rd : if SYNC_RD generate			  		  
-	rd_rising_edge <= rd;
-	rd_falling_edge <= rd;
-	rd_addr_adv <= (rd_addr + 1) when rd = '1' else
+	fifo_rd <= rd;
+	rd_addr_adv <= (rd_addr + 1) when fifo_rd = '1' else
 						rd_addr ;
 end generate ;
 
@@ -107,13 +107,12 @@ begin
 		wr_old <= wr ;
 	end if ;
 end process ;
-wr_rising_edge <= (wr AND (NOT wr_old)) ;
 wr_falling_edge <= ((NOT wr) AND wr_old) ;
+fifo_wr <= wr_falling_edge ;
 end generate ;
 
 gen_sync_wr : if SYNC_WR generate
-wr_rising_edge <= wr ;
-wr_falling_edge <= wr ;
+fifo_wr <= wr ;
 end generate ;
 
 --rd process
@@ -124,7 +123,7 @@ if resetn = '0' then
 elsif clk'event and clk = '1' then
 	if sraz = '1' then
 		rd_addr <= (others => '0');
-	elsif rd_falling_edge = '1' and nb_available_t /= 0 then
+	elsif fifo_rd = '1' and nb_available_t /= 0 then
 			rd_addr <= rd_addr + 1;
 	end if ;
 end if ;
@@ -138,7 +137,7 @@ if resetn = '0' then
 elsif clk'event and clk = '1' then
 	if sraz = '1' then
 		wr_addr <= (others => '0');
-	elsif wr_falling_edge = '1' and nb_available_t /= N then
+	elsif fifo_wr = '1' and nb_available_t /= N then
 		wr_addr <= wr_addr + 1;
 	end if ;
 end if ;
@@ -152,9 +151,9 @@ if resetn = '0' then
 elsif clk'event and clk = '1' then
 	if sraz = '1' then
 		nb_available_t <= (others => '0') ;
-	elsif wr_falling_edge = '1' and rd_falling_edge = '0' and nb_available_t /= N then
+	elsif fifo_wr = '1' and fifo_rd = '0' and nb_available_t /= N then
 		nb_available_t <= nb_available_t + 1 ;
-	elsif rd_falling_edge = '1' and wr_falling_edge = '0' and nb_available_t /= 0 then
+	elsif fifo_rd = '1' and fifo_wr = '0' and nb_available_t /= 0 then
 		nb_available_t <= nb_available_t - 1 ;	
 	end if ;
 end if ;
@@ -164,11 +163,11 @@ end process ;
 nb_available <= nb_available_t ;
 
 empty <= '1' when nb_available_t = 0 else
-			'1' when nb_available_t = 1 and rd_falling_edge = '1' else
+			--'1' when nb_available_t = 1 and fifo_rd = '1' else -- must check if its useful ...
          '0' ;
 
 full <= '1' when nb_available_t = N else
-		  '1' when nb_available_t = N - 1 and wr_falling_edge = '1' else
+		  --'1' when nb_available_t = N - 1 and fifo_wr = '1' else -- must check if its useful ...
 		  '0' ;
 
 wr_data <= wr ;
