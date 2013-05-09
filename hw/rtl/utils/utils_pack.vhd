@@ -19,6 +19,7 @@ package utils_pack is
 -- functions declaration
 function nbit(max : integer) return integer;
 function count_ones(slv : std_logic_vector) return natural;
+function max(LEFT : integer ; RIGHT: integer) return integer ;
 
 
 -- types declaration
@@ -220,7 +221,13 @@ package body utils_pack is
 		 end if;
 	  end loop;
   return n_ones;
-  
 end function count_ones;
+
+	function max(LEFT : integer; RIGHT: INTEGER) return INTEGER is
+		begin
+			 if LEFT > RIGHT then return LEFT;
+			 else return RIGHT;
+		end if;
+	end max;
  
 end utils_pack;

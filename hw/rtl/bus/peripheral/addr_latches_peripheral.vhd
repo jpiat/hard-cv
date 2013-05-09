@@ -33,7 +33,6 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work ;
 use work.utils_pack.all ;
-use work.bus_pack.all ;
 use work.peripheral_pack.all ;
 
 entity addr_latches_peripheral is

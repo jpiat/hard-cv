@@ -98,7 +98,7 @@ end Behavioral;
 
 
 architecture RTL of muxed_addr_interface is
-signal latch_addr, wrt, rdt, cst : std_logic ;
+signal latch_addr, wrt, rdt, cst, be0n_t,  be1n_t : std_logic ;
 signal data_bus_out_t	: std_logic_vector((DATA_WIDTH - 1) downto 0);
 begin
 
@@ -123,6 +123,8 @@ if resetn ='0' then
 elsif clk'event and clk ='1' then
 	wrt <= (NOT wrn) and (NOT csn) and (NOT latch_addr) ;
 	rdt <= (NOT oen) and (NOT csn)  and (NOT latch_addr) ;
+	be0n_t <= be0n ;
+	be1n_t <= be1n ;
 	if latch_addr = '0' and wrn = '0' and csn = '0' then
 		data_bus_out_t <= data ;
 	end if ;
@@ -137,10 +139,7 @@ data <= data_bus_in when (oen = '0' and csn = '0') else
 
 
 -- byte access might kill the fifos !
-data_bus_out <= data_bus_out_t when be0n = '1' and be1n = '1' else
-					 data_bus_out_t when be0n = '0' and be1n = '0' else
-					 (data_bus_out_t(15 downto 8) & data_bus_in(7 downto 0)) when be1n = '0' else
-					 (data_bus_in(15 downto 8) & data_bus_out_t(7 downto 0));
+data_bus_out <= data_bus_out_t ;
 
 
 end RTL ;

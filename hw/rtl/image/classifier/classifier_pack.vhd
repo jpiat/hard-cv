@@ -27,6 +27,22 @@ port( clk	:	in std_logic ;
 		lut_in : in std_logic_vector(7 downto 0)
 );
 end component;
+
+
+component classifier_smoother is
+generic(WIDTH: natural := 640;
+		  HEIGHT: natural := 480);
+port(
+ 		clk : in std_logic; 
+ 		resetn : in std_logic; 
+ 		pixel_clock, hsync, vsync : in std_logic; 
+ 		pixel_clock_out, hsync_out, vsync_out : out std_logic; 
+ 		pixel_data_in : in std_logic_vector(7 downto 0 ); 
+ 		pixel_data_out : out std_logic_vector(7 downto 0 )
+
+);
+end component;
+
 end classifier_pack;
 
 package body classifier_pack is
