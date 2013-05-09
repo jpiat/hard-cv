@@ -57,6 +57,7 @@ component blob_manager is
 generic(NB_BLOB : positive := 32);
 	port(
 		clk, resetn, sraz : in std_logic ; --standard signals
+		blob_class : in std_logic_vector(7 downto 0);
 		blob_index : in unsigned(7 downto 0); -- input blob_index
 		blob_index_to_merge : in unsigned(7 downto 0); -- input blob_index to merge
 		next_blob_index : out unsigned(7 downto 0); -- next available index

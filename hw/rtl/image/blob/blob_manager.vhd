@@ -40,6 +40,7 @@ entity blob_manager is
 generic(NB_BLOB : positive := 32);
 	port(
 		clk, resetn, sraz : in std_logic ; --standard signals
+		blob_class : in std_logic_vector(7 downto 0);
 		blob_index : in unsigned(7 downto 0); -- input blob_index
 		blob_index_to_merge : in unsigned(7 downto 0); -- input blob_index to merge
 		next_blob_index : out unsigned(7 downto 0); -- next available index
@@ -69,7 +70,7 @@ signal add_pixel_posx0, add_pixel_posx1 : std_logic_vector(9 downto 0);
 signal add_pixel_posy0, add_pixel_posy1 : std_logic_vector(9 downto 0);
 signal merge_posx0, merge_posx1 :std_logic_vector(9 downto 0);
 signal merge_posy0, merge_posy1 :std_logic_vector(9 downto 0);
-signal blob_data_to_write, current_blob_data, blob_to_merge_data : std_logic_vector(39 downto 0);
+signal blob_data_to_write, current_blob_data, blob_to_merge_data : std_logic_vector(47 downto 0);
 signal index_in : std_logic_vector(7 downto 0);
 signal slv_next_blob_index_tp, next_free_addr, merged_free_addr : std_logic_vector(7 downto 0);
 signal current_blob_data_addr_mod, blob_to_merge_data_addr, current_blob_data_addr : std_logic_vector(7 downto 0);
@@ -146,7 +147,7 @@ current_blob_data_addr_mod <= blob_send_count when manager_state = SEND else
 										merged_free_addr when new_blob='1' and fifo_empty = '0' else
 										current_blob_data_addr ;
 blob_data_ram : dpram_NxN -- 40bit data 1x32bit ram + 1x8 bit ram
-	generic map(SIZE => 256 , NBIT => 40, ADDR_WIDTH => 8)
+	generic map(SIZE => 256 , NBIT => 48, ADDR_WIDTH => 8)
 	port map(
  		clk => clk,
  		we => blob_wr,
@@ -194,10 +195,10 @@ merge_posy1 <= std_logic_vector(pixel_posy) when pixel_posy > unsigned(current_b
 					current_blob_posy1 ;						 
 
 	
-blob_data_to_write <= std_logic_vector(pixel_posx) & std_logic_vector(pixel_posy) & std_logic_vector(pixel_posx) & std_logic_vector(pixel_posy) when new_blob = '1' else
-							 add_pixel_posx1 & add_pixel_posy1 & add_pixel_posx0 & add_pixel_posy0 when merge_blob_latched = '1' and already_merged = '1' else
-							 merge_posx1 & merge_posy1 & merge_posy0 & merge_posx0 when merge_blob_latched = '1' else
-							 add_pixel_posx1 & add_pixel_posy1 & add_pixel_posx0 & add_pixel_posy0 when add_pixel_latched = '1' else
+blob_data_to_write <= blob_class & std_logic_vector(pixel_posx) & std_logic_vector(pixel_posy) & std_logic_vector(pixel_posx) & std_logic_vector(pixel_posy) when new_blob = '1' else
+							 blob_class & add_pixel_posx1 & add_pixel_posy1 & add_pixel_posx0 & add_pixel_posy0 when merge_blob_latched = '1' and already_merged = '1' else
+							 blob_class & merge_posx1 & merge_posy1 & merge_posy0 & merge_posx0 when merge_blob_latched = '1' else
+							 blob_class & add_pixel_posx1 & add_pixel_posy1 & add_pixel_posx0 & add_pixel_posy0 when add_pixel_latched = '1' else
 							 (others => '0');
 blob_wr <= '1' when new_blob = '1' else
 			  '1' when merge_blob_latched = '1' else
@@ -294,7 +295,7 @@ with manager_state select
 	
 mem_data <= current_blob_data(15 downto 0) when blob_data_send_count = 0 else
 				current_blob_data(31 downto 16) when blob_data_send_count = 1 else
-				X"00" & current_blob_data(39 downto 32) ;
+				current_blob_data(47 downto 32) ;
 				
 mem_addr <= X"00" & blob_send_count ;
 

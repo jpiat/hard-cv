@@ -43,7 +43,12 @@ ARCHITECTURE behavior OF fifo_peripheral_testbench IS
  
 
 	component fifo_peripheral is
-	generic(BASE_ADDR	:	natural	:= 0; ADDR_WIDTH : positive := 8; WIDTH	: positive := 16; SIZE	: positive	:= 128);
+	generic(ADDR_WIDTH : positive := 16; --! width of the address bus
+			WIDTH	: positive := 16; --! width of the data bus
+			SIZE	: positive	:= 128; --! fifo depth
+			BURST_SIZE : positive := 4;
+			SYNC_LOGIC_INTERFACE : boolean := false 
+			); 
 	port(
 			clk, resetn : in std_logic ;
 			addr_bus : in std_logic_vector((ADDR_WIDTH - 1) downto 0);
@@ -86,7 +91,7 @@ BEGIN
  
 	-- Instantiate the Unit Under Test (UUT)
    uut: fifo_peripheral 
-	GENERIC MAP(BASE_ADDR	=> 0,  ADDR_WIDTH => 8 , WIDTH	=> 16, SIZE	=> 512)
+	GENERIC MAP(ADDR_WIDTH => 8 , WIDTH	=> 16, SIZE	=> 512, BURST_SIZE => 4, SYNC_LOGIC_INTERFACE => true)
 	PORT MAP (
           clk => clk,
           resetn => resetn,
@@ -121,25 +126,26 @@ BEGIN
    begin		
       resetn <= '0' ;
 		addr_bus <= (others => '0') ;
+		data_bus_in <= (others => '0') ;
       wait for 100 ns;	
 		resetn <= '1' ;
 		addr_bus <= X"02" ;
       wait for clk_period*10;
-		loop_available: FOR b IN 1 TO 10 LOOP -- la variable de boucle est a de 1 à 10
-					rd_bus <= '1' ;
-					WAIT FOR clk_period; -- attend la valeur de pulse_time
-					rd_bus <= '0' ;
-					WAIT FOR clk_period;
-				END LOOP loop_available;
-		addr_bus <= X"00" ;
-		loop_read: FOR b IN 1 TO 1024 LOOP -- la variable de boucle est a de 1 à 10
-					rd_bus <= '1' ;
-					WAIT FOR clk_period; -- attend la valeur de pulse_time
-					rd_bus <= '0' ;
-					WAIT FOR clk_period;
-				END LOOP loop_read;
-			data_bus_in <= (others => '0');	
-			loop_write: FOR b IN 1 TO 1024 LOOP -- la variable de boucle est a de 1 à 10
+--		loop_available: FOR b IN 1 TO 10 LOOP -- la variable de boucle est a de 1 à 10
+--					rd_bus <= '1' ;
+--					WAIT FOR clk_period; -- attend la valeur de pulse_time
+--					rd_bus <= '0' ;
+--					WAIT FOR clk_period;
+--				END LOOP loop_available;
+--		addr_bus <= X"00" ;
+--		loop_read: FOR b IN 1 TO 1024 LOOP -- la variable de boucle est a de 1 à 10
+--					rd_bus <= '1' ;
+--					WAIT FOR clk_period; -- attend la valeur de pulse_time
+--					rd_bus <= '0' ;
+--					WAIT FOR clk_period;
+--				END LOOP loop_read;
+--		data_bus_in <= (others => '0');	
+		loop_write: FOR b IN 1 TO 128 LOOP -- la variable de boucle est a de 1 à 10
 					wr_bus <= '1' ;
 					WAIT FOR clk_period; -- attend la valeur de pulse_time
 					wr_bus <= '0' ;
@@ -160,7 +166,7 @@ BEGIN
 		wait for 100 ns;	
 		
       wait for clk_period*10;
-		loop_logic_wr: FOR a IN 1 TO 1024 LOOP -- la variable de boucle est a de 1 à 10
+		loop_logic_wr: FOR a IN 1 TO 128 LOOP -- la variable de boucle est a de 1 à 10
 					wrB <= '1' ;
 					WAIT FOR clk_period; -- attend la valeur de pulse_time
 					wrB <= '0' ;
@@ -172,21 +178,22 @@ BEGIN
       wait;
    end process;
 	
-		-- logic Stimulus process
---   logic_proc_rd: process
---   begin		
---      -- hold reset state for 100 ns.
---		wait for 100 ns;	
---      wait for clk_period*10;
---		loop_logic_rd: FOR c IN 1 TO 1024 LOOP -- la variable de boucle est a de 1 à 10
+--	logic Stimulus process
+   logic_proc_rd: process
+   begin		
+      -- hold reset state for 100 ns.
+		wait for 100 ns;	
+      wait for clk_period*4000;
+		rdA <= '1' ;
+		loop_logic_rd: FOR c IN 1 TO 1024 LOOP -- la variable de boucle est a de 1 à 10
 --					rdA <= '1' ;
 --					WAIT FOR clk_period; -- attend la valeur de pulse_time
 --					rdA <= '0' ;
---					WAIT FOR clk_period;
---				END LOOP loop_logic_rd;
---      -- insert stimulus here 
---
---      wait;
---   end process;
+					WAIT FOR clk_period;
+				END LOOP loop_logic_rd;
+      -- insert stimulus here 
+
+      wait;
+   end process;
 
 END;

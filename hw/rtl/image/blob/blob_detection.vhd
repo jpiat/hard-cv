@@ -70,6 +70,7 @@ signal has_neighbour : std_logic ;
 signal is_blob_pixel : std_logic ;
 signal pixel_clock_old, pixel_clock_re : std_logic ;
 signal vsync_fe, vsync_re, vsync_old : std_logic ;
+signal blob_class : std_logic_vector(7 downto 0) ;
 begin
 
 
@@ -79,6 +80,7 @@ blobs0: blob_manager
 	generic map(NB_BLOB => 32)
 	port map(
 	clk => clk, resetn => resetn, sraz => sraz_blobs,
+		blob_class => blob_class ,
 		blob_index => current_blob,
 		next_blob_index => new_blob_index,
 		blob_index_to_merge => blob_index_to_merge ,
@@ -131,8 +133,10 @@ current_blob <= neighbours0(3) when is_blob_pixel='1' and neighbours0(3) /= 0 el
 
 has_neighbour <= '1' when (neighbours0(3) /= 0) or (neighbours0(2) /= 0) or (neighbours0(1) /= 0) or (neighbours0(0) /= 0) else
 						'0' ;
-is_blob_pixel <= 	'1' when pixel_data_in = x"FF" and hsync = '0' else
+is_blob_pixel <= 	'1' when pixel_data_in /= x"00" and hsync = '0' else
 						'0';
+blob_class <= 	pixel_data_in ;				
+
 new_blob <= pixel_clock_re when is_blob_pixel = '1' and has_neighbour = '0' else
 				'0' ;
 add_pixel <= pixel_clock_re when is_blob_pixel='1' and has_neighbour /= '0' else

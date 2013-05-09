@@ -48,7 +48,7 @@ architecture Behavioral of dp_fifo is
 
 constant std_fifo_size : std_logic_vector(nbit(N)  downto 0 ) :=  std_logic_vector(to_unsigned(N, nbit(N) + 1));
 
-signal rd_addr, wr_addr: std_logic_vector((nbit(N) - 1) downto 0)  ;
+signal rd_addr, rd_addr_adv, wr_addr: std_logic_vector((nbit(N) - 1) downto 0)  ;
 signal nb_free_t, nb_available_t : unsigned(nbit(N) downto 0 ) ;
 signal slv_nb_available_t : std_logic_vector(nbit(N) downto 0 ) ;
 signal fifo_out, fifo_in : std_logic_vector((W - 1 ) downto 0)  ;
@@ -69,7 +69,7 @@ dp_ram0 : dpram_NxN
  		we => wr_data ,
  		di =>  data_in ,
 		a	=> wr_addr,
- 		dpra => rd_addr ,	
+ 		dpra => rd_addr_adv ,	
 		dpo =>  fifo_out 
 	); 
 
@@ -87,11 +87,14 @@ gen_async_rd : if NOT SYNC_RD generate
 	end process ;
 	rd_rising_edge <= (rd AND (NOT rd_old));
 	rd_falling_edge <= ((NOT rd) AND rd_old);
+	rd_addr_adv <= rd_addr ;
 end generate ;
 
 gen_sync_rd : if SYNC_RD generate			  		  
 	rd_rising_edge <= rd;
 	rd_falling_edge <= rd;
+	rd_addr_adv <= (rd_addr + 1) when rd = '1' else
+						rd_addr ;
 end generate ;
 
 
