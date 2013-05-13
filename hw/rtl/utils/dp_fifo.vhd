@@ -162,12 +162,14 @@ end process ;
 
 nb_available <= nb_available_t ;
 
-empty <= '1' when nb_available_t = 0 else
-			--'1' when nb_available_t = 1 and fifo_rd = '1' else -- must check if its useful ...
-         '0' ;
 
+
+empty <= '1' when nb_available_t = 0 else
+			'1' when nb_available_t = 1 and fifo_rd = '1' else -- must check if its useful ...
+         '0' ;
+			
 full <= '1' when nb_available_t = N else
-		  --'1' when nb_available_t = N - 1 and fifo_wr = '1' else -- must check if its useful ...
+		  '1' when nb_available_t = N - 1 and fifo_wr = '1' else -- must check if its useful ...
 		  '0' ;
 
 wr_data <= wr ;
