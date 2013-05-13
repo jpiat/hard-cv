@@ -66,7 +66,7 @@ ARCHITECTURE behavior OF fifo_peripheral_testbench IS
    --Inputs
    signal clk : std_logic := '0';
    signal resetn : std_logic := '0';
-   signal addr_bus : std_logic_vector(7 downto 0) := (others => '0');
+   signal addr_bus : std_logic_vector(11 downto 0) := (others => '0');
    signal wr_bus : std_logic := '0';
    signal rd_bus : std_logic := '0';
    signal wrB : std_logic := '0';
@@ -91,7 +91,7 @@ BEGIN
  
 	-- Instantiate the Unit Under Test (UUT)
    uut: fifo_peripheral 
-	GENERIC MAP(ADDR_WIDTH => 8 , WIDTH	=> 16, SIZE	=> 512, BURST_SIZE => 4, SYNC_LOGIC_INTERFACE => true)
+	GENERIC MAP(ADDR_WIDTH => 12 , WIDTH	=> 16, SIZE	=> 1024, BURST_SIZE => 512, SYNC_LOGIC_INTERFACE => true)
 	PORT MAP (
           clk => clk,
           resetn => resetn,
@@ -129,15 +129,15 @@ BEGIN
 		data_bus_in <= (others => '0') ;
       wait for 100 ns;	
 		resetn <= '1' ;
-		addr_bus <= X"02" ;
+		addr_bus <= X"200" ;
       wait for clk_period*10;
---		loop_available: FOR b IN 1 TO 10 LOOP -- la variable de boucle est a de 1 à 10
---					rd_bus <= '1' ;
---					WAIT FOR clk_period; -- attend la valeur de pulse_time
---					rd_bus <= '0' ;
---					WAIT FOR clk_period;
---				END LOOP loop_available;
---		addr_bus <= X"00" ;
+		loop_available: FOR b IN 1 TO 10 LOOP -- la variable de boucle est a de 1 à 10
+					rd_bus <= '1' ;
+					WAIT FOR clk_period; -- attend la valeur de pulse_time
+					rd_bus <= '0' ;
+					WAIT FOR clk_period;
+				END LOOP loop_available;
+		addr_bus <= X"000" ;
 --		loop_read: FOR b IN 1 TO 1024 LOOP -- la variable de boucle est a de 1 à 10
 --					rd_bus <= '1' ;
 --					WAIT FOR clk_period; -- attend la valeur de pulse_time

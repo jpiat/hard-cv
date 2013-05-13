@@ -136,10 +136,10 @@ fifoB_rd <= '1' when in_addr((address_space_nbit-1)) = '0' and bus_cs = '1' and 
 fifoA_wr <= '1' when in_addr((address_space_nbit-1)) = '0' and bus_cs = '1' and wr_bus = '1' else
 				'0' ;
 	
-srazA <= '1' when bus_cs = '1' and rd_bus = '0' and wr_bus = '1' and in_addr((address_space_nbit-1)) = '1' and in_addr(1 downto 0) = "01" else
+srazA <= '1' when bus_cs = '1' and rd_bus = '0' and wr_bus = '1' and in_addr(address_space_nbit-1) = '1' and in_addr(1 downto 0) = "01" else
 			'0' ;
 
-srazB <= '1' when bus_cs = '1' and rd_bus = '0' and wr_bus = '1' and in_addr((address_space_nbit-1)) = '1' and in_addr(1 downto 0) = "10" else
+srazB <= '1' when bus_cs = '1' and rd_bus = '0' and wr_bus = '1' and in_addr(address_space_nbit-1) = '1' and in_addr(1 downto 0) = "10" else
 			'0' ;
 				
 fifoA_in <= data_bus_in ;
