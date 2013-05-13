@@ -172,7 +172,9 @@ full <= '1' when nb_available_t = N else
 		  '1' when nb_available_t = N - 1 and fifo_wr = '1' else -- must check if its useful ...
 		  '0' ;
 
-wr_data <= wr ;
+
+wr_data <= fifo_wr ;
+-- wr_data <= wr ; -- oldway
 
 end Behavioral;
 
