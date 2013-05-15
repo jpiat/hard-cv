@@ -31,6 +31,7 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 --use UNISIM.VComponents.all;
 
 entity pixel2fifo is
+generic(ADD_SYNC : boolean := false);
 port(
 	clk, resetn : in std_logic ;
 	pixel_clock, hsync, vsync : in std_logic; 
@@ -116,10 +117,18 @@ begin
 end process ;
 
 
-fifo_wr <= (write_pixel and (NOT write_pixel_old)) when vsync = '0' and hsync = '0' else
-				'0' ;
-				
-fifo_data <= pixel_buffer ;
+gen_add_sync : if ADD_SYNC generate
+	fifo_wr <= (write_pixel and (NOT write_pixel_old)) when vsync = '0' and hsync = '0' else
+					vsync_rising_edge ;
+	fifo_data <= pixel_buffer when vsync = '0' else
+					  X"55AA" ;
+end generate ;
+
+gen_no_sync : if (NOT ADD_SYNC) generate
+	fifo_wr <= (write_pixel and (NOT write_pixel_old)) when vsync = '0' and hsync = '0' else
+					'0' ;
+	fifo_data <= pixel_buffer ;
+end generate ;
 
 
 end Behavioral;

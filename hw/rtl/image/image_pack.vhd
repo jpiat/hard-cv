@@ -279,6 +279,7 @@ end component;
 
 
 component pixel2fifo is
+generic(ADD_SYNC : boolean := false);
 port(
 	clk, resetn : in std_logic ;
 	pixel_clock, hsync, vsync : in std_logic; 
