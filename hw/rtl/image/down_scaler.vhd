@@ -149,12 +149,15 @@ architecture RTL of down_scaler is
 	signal line_ram_data_in, line_ram_data_out, sum : std_logic_vector(15 downto 0 ) ; 
 	signal line_ram_we : std_logic ; 
 	signal pixel_counter : std_logic_vector(nbit(INPUT_WIDTH)-1 downto 0 ) ; 
+	signal modulo_counter : std_logic_vector(nbit(SCALING_FACTOR)-1 downto 0 ) ; 
 	signal line_counter : std_logic_vector(nbit(INPUT_HEIGHT)-1 downto 0 ) ; 
-	signal pxclk_re, hsync_re, vsync_re, pxclk_old, hsync_old, vsync_old : std_logic ;
+	signal pxclk_re, hsync_re, hsync_fe,vsync_re, pxclk_old, hsync_old, vsync_old : std_logic ;
+	signal hsync_t : std_logic ;
+	signal pixel_out_t : std_logic_vector(7 downto 0);
 	begin
 	
 	line_ram0 : dpram_NxN --line ram to accumulate data
-		generic map(SIZE => INPUT_WIDTH/SCALING_FACTOR, NBIT => 16, ADDR_WIDTH => NBIT_ADDR)
+		generic map(SIZE => (INPUT_WIDTH/SCALING_FACTOR + 4), NBIT => 16, ADDR_WIDTH => NBIT_ADDR)
 		port map ( 
 			clk => clk, 
 			a => line_ram_addr, 
@@ -165,32 +168,37 @@ architecture RTL of down_scaler is
 			we => line_ram_we
 		); 
 	
-	line_ram_data_in <= sum when line_counter  > 0 else
+	
+	
+	line_ram_data_in <= sum when line_counter(0)  /= '0' else
 							  sum when pixel_counter(nbit(SCALING_FACTOR)-1 downto 0)  > 0 else
 							  (X"00" & pixel_data_in) ;
 	
-	line_ram_addr <= pixel_counter((nbit(SCALING_FACTOR)+NBIT_ADDR-1) downto nbit(SCALING_FACTOR));
+	line_ram_addr <= pixel_counter((nbit(SCALING_FACTOR)+NBIT_ADDR-1) downto nbit(SCALING_FACTOR)) when pixel_counter < INPUT_WIDTH else
+						  (others => '0');
 	
-	line_ram_we <= pixel_clock when hsync = '0' else
+	line_ram_we <= pxclk_re when hsync = '0' else
 						'0' ;
 						
 	sum <= line_ram_data_out + pixel_data_in ;
 	
-	pixel_data_out <= sum((2*nbit(SCALING_FACTOR)+7)  downto 2*nbit(SCALING_FACTOR));
+	pixel_out_t <= sum((2*nbit(SCALING_FACTOR)+7)  downto 2*nbit(SCALING_FACTOR));
 	
 	process(clk, resetn)
 	begin
 		if resetn = '0' then
 			pixel_counter <= (others => '0') ;
 		elsif clk'event and clk = '1' then
-			if hsync_re = '1' then
+			if hsync_fe = '1' then
 				pixel_counter <= (others => '0') ;
 			elsif pxclk_re = '1' then
 				pixel_counter <= pixel_counter + 1 ;
 			end if ;
 		end if ;
 	end process ;
-	pixel_clock_out <= pixel_counter(nbit(SCALING_FACTOR));
+	
+	pixel_clock_out <= (not pixel_counter(nbit(SCALING_FACTOR)-1)) when pixel_counter >= SCALING_FACTOR else
+							 '0' ;
 	
 	process(clk, resetn)
 	begin
@@ -204,7 +212,7 @@ architecture RTL of down_scaler is
 			end if;
 		end if ;
 	end process ;
-	hsync_out <= line_counter(nbit(SCALING_FACTOR));
+	hsync_t <= (not line_counter(nbit(SCALING_FACTOR)-1)) or hsync;
 	
 	process(clk, resetn)
 	begin
@@ -220,9 +228,20 @@ architecture RTL of down_scaler is
 	end process ;
 	pxclk_re <= (not pxclk_old) and  pixel_clock ;
 	hsync_re <= (not hsync_old) and hsync ;
+	hsync_fe <= (hsync_old) and (not hsync) ;
 	vsync_re <= (not vsync_old) and vsync ;
 	
-	vsync_out <= vsync ;
+	
+	process(clk)
+	begin
+		if clk'event and clk = '1' then
+			vsync_out <= vsync ;
+			hsync_out <= hsync_t ;
+			if pxclk_re = '1' then
+				pixel_data_out <= pixel_out_t ;
+			end if ;
+		end if ;
+	end process ;
 	
 	
 end RTL ;
