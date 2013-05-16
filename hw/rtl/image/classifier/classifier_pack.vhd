@@ -43,6 +43,19 @@ port(
 );
 end component;
 
+component classifier_lut is
+	generic(INDEX_WIDTH : positive := 12 ; CLASS_WIDTH : positive := 2);
+	port(
+		clk, resetn : in std_logic ;
+		we, cs : in std_logic ;
+		bus_addr : in std_logic_vector(15 downto 0);
+		data_in : in std_logic_vector(15 downto 0);
+		data_out : out std_logic_vector(15 downto 0);
+		class_index : in std_logic_vector(INDEX_WIDTH-1 downto 0);
+		class_value : out std_logic_vector(CLASS_WIDTH-1 downto 0)
+	);
+end component;
+
 end classifier_pack;
 
 package body classifier_pack is

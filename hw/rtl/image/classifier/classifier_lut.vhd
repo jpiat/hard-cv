@@ -69,14 +69,14 @@ begin
 		); 
 		
 		with  conv_integer(class_index(nb_class_addr_bit-1 downto 0)) select
-			class_value <= class_value_packet(nb_class_addr_bit-1 downto 0) when 0,
-								class_value_packet(((nb_class_addr_bit)*2 - 1) downto nb_class_addr_bit) when 1,
-								class_value_packet(((nb_class_addr_bit)*3 - 1) downto nb_class_addr_bit*2) when 2,
-								class_value_packet(((nb_class_addr_bit)*4 - 1) downto nb_class_addr_bit*3) when 3,
-								class_value_packet(((nb_class_addr_bit)*5 - 1) downto nb_class_addr_bit*4) when 4,
-								class_value_packet(((nb_class_addr_bit)*6 - 1) downto nb_class_addr_bit*5) when 5,
-								class_value_packet(((nb_class_addr_bit)*7 - 1) downto nb_class_addr_bit*6) when 6,
-								class_value_packet(((nb_class_addr_bit)*8 - 1) downto nb_class_addr_bit*7) when 7,
+			class_value <= class_value_packet(CLASS_WIDTH-1 downto 0) when 0,
+								class_value_packet(((CLASS_WIDTH)*2 - 1) downto CLASS_WIDTH) when 1,
+								class_value_packet(((CLASS_WIDTH)*3 - 1) downto CLASS_WIDTH*2) when 2,
+								class_value_packet(((CLASS_WIDTH)*4 - 1) downto CLASS_WIDTH*3) when 3,
+								class_value_packet(((CLASS_WIDTH)*5 - 1) downto CLASS_WIDTH*4) when 4,
+								class_value_packet(((CLASS_WIDTH)*6 - 1) downto CLASS_WIDTH*5) when 5,
+								class_value_packet(((CLASS_WIDTH)*7 - 1) downto CLASS_WIDTH*6) when 6,
+								class_value_packet(((CLASS_WIDTH)*8 - 1) downto CLASS_WIDTH*7) when 7,
 						      (others => '0' ) when others ;
 
 end Behavioral;
