@@ -150,7 +150,7 @@ architecture RTL of down_scaler is
 	signal line_ram_we : std_logic ; 
 	signal pixel_counter : std_logic_vector(nbit(INPUT_WIDTH)-1 downto 0 ) ; 
 	signal modulo_counter : std_logic_vector(nbit(SCALING_FACTOR)-1 downto 0 ) ; 
-	signal line_counter : std_logic_vector(nbit(INPUT_HEIGHT)-1 downto 0 ) ; 
+	signal line_counter : std_logic_vector(nbit(SCALING_FACTOR)-1 downto 0 ) ; 
 	signal pxclk_re, hsync_re, hsync_fe,vsync_re, pxclk_old, hsync_old, vsync_old : std_logic ;
 	signal hsync_t : std_logic ;
 	signal pixel_out_t : std_logic_vector(7 downto 0);
@@ -170,7 +170,7 @@ architecture RTL of down_scaler is
 	
 	
 	
-	line_ram_data_in <= sum when line_counter(0)  /= '0' else
+	line_ram_data_in <= sum when line_counter(nbit(SCALING_FACTOR)-1 downto 0)  /= 0 else
 							  sum when pixel_counter(nbit(SCALING_FACTOR)-1 downto 0)  > 0 else
 							  (X"00" & pixel_data_in) ;
 	
@@ -212,7 +212,8 @@ architecture RTL of down_scaler is
 			end if;
 		end if ;
 	end process ;
-	hsync_t <= (not line_counter(nbit(SCALING_FACTOR)-1)) or hsync;
+	hsync_t <= '1' when line_counter < (SCALING_FACTOR - 1) else
+				  hsync ;
 	
 	process(clk, resetn)
 	begin
