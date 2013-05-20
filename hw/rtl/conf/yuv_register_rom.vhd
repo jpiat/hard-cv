@@ -469,8 +469,8 @@ architecture ov7725_qvga of yuv_register_rom is
 	( X"2b" & X"00"),
 	( X"22" & X"7f"),
 	( X"23" & X"03"),
-	( X"11" & X"09"), -- should work for 15fps fint = 24 * (4/(10*2)) = 4.8mhz
-	--( X"11" & X"04"), -- should work for 30fps fint = 24 * (4/(5*2)) = 9.6mhz
+	--( X"11" & X"09"), -- should work for 15fps fint = 24 * (4/(10*2)) = 4.8mhz
+	( X"11" & X"04"), -- should work for 30fps fint = 24 * (4/(5*2)) = 9.6mhz
 	--( X"11" & X"01"), -- should work for 75fps fint = 24 * (4/(2*2)) = 24mhz
 	--( X"11" & X"02"), -- should work for 50fps fint = 24 * (4/(3*2)) = 16mhz
 	( X"0c" & X"d0"),
