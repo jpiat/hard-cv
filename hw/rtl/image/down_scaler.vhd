@@ -2,6 +2,9 @@ library IEEE;
         use IEEE.std_logic_1164.all;
         use IEEE.std_logic_unsigned.all;
 		  use ieee.numeric_std.all ;
+			use IEEE.MATH_REAL.log2;
+			use IEEE.MATH_REAL.ceil;
+			
 library work;
         use work.image_pack.all ;
 		  use work.utils_pack.all ;
@@ -35,16 +38,15 @@ end down_scaler;
 --	signal state : scaler_state ;
 --	begin
 --	
---	line_ram0 : dpram_NxN --line ram to accumulate data
---		generic map(SIZE => INPUT_WIDTH/SCALING_FACTOR, NBIT => 16, ADDR_WIDTH => NBIT)
+--	line_ram0 : line_ram --line ram to accumulate data
+--		generic map(LINE_SIZE => INPUT_WIDTH/SCALING_FACTOR, ADDR_SIZE => NBIT)
 --		port map ( 
 --			clk => clk, 
---			a => line_ram_addr, 
---			dpra => (others => '0'),
---			di => line_ram_data_in,
---			spo => line_ram_data_out,
---			dpo => open,
---			we => line_ram_we
+--			addr => line_ram_addr, 
+--			data_in => line_ram_data_in,
+--			data_out => line_ram_data_out,
+--			we => line_ram_we, 
+--			en => '1'
 --		); 
 --	
 --	pixel_data_out <= line_ram_data_out((SHIFT_LENGTH + 7) downto SHIFT_LENGTH) ; --output data is shifted by 3 for division by 8
@@ -177,7 +179,7 @@ architecture RTL of down_scaler is
 	line_ram_addr <= pixel_counter((nbit(SCALING_FACTOR)+NBIT_ADDR-1) downto nbit(SCALING_FACTOR)) when pixel_counter < INPUT_WIDTH else
 						  (others => '0');
 	
-	line_ram_we <= pxclk_re when hsync = '0' else
+	line_ram_we <= pxclk_re when hsync = '0' and pixel_counter < INPUT_WIDTH else
 						'0' ;
 						
 	sum <= line_ram_data_out + pixel_data_in ;
@@ -213,6 +215,7 @@ architecture RTL of down_scaler is
 		end if ;
 	end process ;
 	hsync_t <= '1' when line_counter < (SCALING_FACTOR - 1) else
+				  '1' when pixel_counter > INPUT_WIDTH else
 				  hsync ;
 	
 	process(clk, resetn)
