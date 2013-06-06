@@ -31,6 +31,7 @@ library IEEE;
 --use UNISIM.VComponents.all;
 
 use work.interface_pack.all ;
+use work.utils_pack.all ;
 
 entity i2c_conf is
 	generic(ADD_WIDTH : positive := 8 ; SLAVE_ADD : std_logic_vector(6 downto 0) := "0100001");
@@ -47,7 +48,7 @@ end i2c_conf;
 
 architecture Behavioral of i2c_conf is
 	constant NB_REGS : integer := 255; 
-	TYPE registers_state IS (INIT, SEND_ADDR, WAIT_ACK0, SEND_DATA, WAIT_ACK1, NEXT_REG, STOP) ; 
+	TYPE registers_state IS (INIT, SEND_ADDR, WAIT_ACK0, SEND_DATA, WAIT_ACK1, WAIT_TEMP, NEXT_REG, STOP) ; 
 	signal reg_state : registers_state ; 
 	
 	signal reg_addr_temp : std_logic_vector(ADD_WIDTH - 1 downto 0);
@@ -57,6 +58,9 @@ architecture Behavioral of i2c_conf is
 	signal rcv : std_logic ; 
 	signal dispo : std_logic ; 
 	signal ack_byte, nack_byte : std_logic ; 
+	
+	signal sraz_temp, en_temp : std_logic ;
+	signal temp_val : std_logic_vector(9 downto 0);
 begin
 
 	i2c_master0 : i2c_master
@@ -75,6 +79,24 @@ begin
 			nack_byte => nack_byte
 		); 
 
+	temp_counter : simple_counter
+	 generic map(NBIT => 10)
+    port map( clk => i2c_clk,
+           resetn => resetn ,
+           sraz => sraz_temp ,
+           en => en_temp,
+			  load => '0',
+			  E => (others => '0'),
+           Q => temp_val
+			  );
+	with reg_state select
+		en_temp <= '1' when wait_temp,
+					  '0' when others;
+					  
+	with reg_state select
+		sraz_temp <= '0' when wait_temp,
+		'1' when others;
+					
 
 -- sccb_interface
 	process(i2c_clk, resetn)
@@ -113,10 +135,15 @@ begin
 					when wait_ack1 => -- wait for ack
 					  if nack_byte = '1' then
 								  send <= '0' ; 
-								  reg_state <= next_reg ;
+								  reg_state <= wait_temp ;
 						elsif  ack_byte = '0'  then
-		 					reg_state <= next_reg ;
+		 					reg_state <= wait_temp ;
 		 				end if ;
+					when wait_temp => -- switching to next register
+		 				send <= '0' ;
+		 				if temp_val = "1111111111" then	
+							reg_state <= next_reg ;
+						end if ;
 		 			when next_reg => -- switching to next register
 		 				send <= '0' ;
 		 				if ( NOT ack_byte = '1' ) AND  reg_data /= X"FFFF"  AND  dispo = '1'  AND  conv_integer(reg_addr_temp) < 255  then
@@ -135,6 +162,9 @@ begin
 		 	end if ;
 		 end process;  
 	reg_addr <= reg_addr_temp ;
+	
+	
+	
 
 end Behavioral;
 

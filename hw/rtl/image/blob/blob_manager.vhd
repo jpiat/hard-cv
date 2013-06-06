@@ -195,11 +195,21 @@ merge_posy1 <= std_logic_vector(pixel_posy) when pixel_posy > unsigned(current_b
 					current_blob_posy1 ;						 
 
 	
-blob_data_to_write <= blob_class & std_logic_vector(pixel_posx) & std_logic_vector(pixel_posy) & std_logic_vector(pixel_posx) & std_logic_vector(pixel_posy) when new_blob = '1' else
+blob_data_to_write <=(others => '0') when manager_state = SEND else
+							 blob_class & std_logic_vector(pixel_posx) & std_logic_vector(pixel_posy) & std_logic_vector(pixel_posx) & std_logic_vector(pixel_posy) when new_blob = '1' else
 							 blob_class & add_pixel_posx1 & add_pixel_posy1 & add_pixel_posx0 & add_pixel_posy0 when merge_blob_latched = '1' and already_merged = '1' else
 							 blob_class & merge_posx1 & merge_posy1 & merge_posy0 & merge_posx0 when merge_blob_latched = '1' else
 							 blob_class & add_pixel_posx1 & add_pixel_posy1 & add_pixel_posx0 & add_pixel_posy0 when add_pixel_latched = '1' else
 							 (others => '0');
+							 
+--blob data structure
+-- blob class 8 bit
+-- posx1 10 bit	
+-- posy1 10 bit
+-- posx0 10 bit
+-- posy0 10 bit						 
+							 
+
 blob_wr <= '1' when new_blob = '1' else
 			  '1' when merge_blob_latched = '1' else
 			  '1' when add_pixel_latched = '1' else

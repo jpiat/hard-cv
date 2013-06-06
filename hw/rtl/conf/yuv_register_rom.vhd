@@ -401,14 +401,14 @@ end ov7670_vga ;
 
 architecture ov7725_qvga of yuv_register_rom is
  
-	type array_73 is array (0 to 73) of std_logic_vector(15 downto 0 ); 
+	type reg_array is array (0 to 77) of std_logic_vector(15 downto 0 ); 
 	
 	
 	-- CONFIGURATION TAKEN FROM ov534.c IN LINUX KERNEL DRIVERS
-	signal rom : array_73 :=( 
+	signal rom : reg_array :=( 
 	( X"12" & X"80"), -- reset all registers
 	( X"12" & X"40"),
-	( X"11" & X"01" ),
+	( X"11" & X"01"),
 	( X"17" & X"3f"),
 	( X"18" & X"50"),
 	( X"19" & X"03"),
@@ -434,6 +434,7 @@ architecture ov7725_qvga of yuv_register_rom is
 	( X"2b" & X"00"),
 	( X"6b" & X"aa"),
 	( X"13" & X"ff"),		-- AWB 
+	--( X"13" & X"fD"),		-- no AWB 
 	( X"90" & X"05"),
 	( X"91" & X"01"),
 	( X"92" & X"03"),
@@ -482,6 +483,11 @@ architecture ov7725_qvga of yuv_register_rom is
 	( X"ac" & X"bf"),
 	( X"8e" & X"00"),		-- De-noise threshold 
 	( X"0c" & X"d0"),
+	--( X"0c" & X"10"),
+	( X"3e" & X"88"),
+	(X"a6" & X"02" ), --enabling dsp
+	(X"a7" & X"20" ), -- experiencing with sat values
+	(X"a8" & X"20" ), -- experiencing with sat values 
 	( X"FF" & X"FF" )
 );
 
@@ -509,7 +515,7 @@ architecture ov7725_vga of yuv_register_rom is
 	-- CONFIGURATION TAKEN FROM OV534.c IN LINUX KERNEL DRIVERS
 	signal rom : array_73 :=( 
 	( X"12" & X"00"),
-	( X"11" & X"01" ),
+	( X"11" & X"01"),
 	( X"15" & X"40"), -- COM10, enable HREF change on HSYNC
 	( X"17" & X"26"),
 	( X"18" & X"a0"),
@@ -598,3 +604,106 @@ architecture ov7725_vga of yuv_register_rom is
 		 end process;  
 	
 end ov7725_vga ;
+
+
+architecture ov7725_qvga_patched of yuv_register_rom is
+ 
+	type reg_array is array (0 to 77) of std_logic_vector(15 downto 0 ); 
+	
+	
+	-- CONFIGURATION TAKEN FROM ov534.c IN LINUX KERNEL DRIVERS
+	signal rom : reg_array :=( 
+	( X"12" & X"80"), -- reset all registers
+	( X"12" & X"40"), -- reset all registers
+	(X"11" & X"01"),
+	(X"3d" & X"03"),
+	(X"17" & X"3f"),
+	(X"18" & X"50"),
+	(X"19" & X"03"),
+	(X"1a" & X"78"),
+	(X"32" & X"00"),
+	(X"29" & X"50"),
+	(X"2c" & X"78"),
+	(X"65" & X"2f"),
+	(X"11" & X"01"),
+	(X"42" & X"7f"),
+	(X"63" & X"AA"), 	-- AWB
+	(X"64" & X"ff"),
+	(X"66" & X"00"),
+	(X"13" & X"f0"),	-- COM8  - jfrancois X"f0	orig x0f7
+	(X"0d" & X"41"),
+	(X"0f" & X"c5"),
+	(X"14" & X"11"),
+	(X"22" & X"7f"),
+	(X"23" & X"03"),
+	(X"24" & X"40"),
+	(X"25" & X"30"),
+	(X"26" & X"a1"),
+	(X"2a" & X"00"),
+	(X"2b" & X"00"), 
+	(X"6b" & X"aa"),
+	(X"13" & X"ff"),	-- COM8 - jfrancois X"ff orig X"f7
+	(X"90" & X"05"),
+	(X"91" & X"01"),
+	(X"92" & X"03"),
+	(X"93" & X"00"),
+	(X"94" & X"60"),
+	(X"95" & X"3c"),
+	(X"96" & X"24"),
+	(X"97" & X"1e"),
+	(X"98" & X"62"),
+	(X"99" & X"80"),
+	(X"9a" & X"1e"),
+	(X"9b" & X"08"),
+	(X"9c" & X"20"),
+	(X"9e" & X"81"),
+	(X"a6" & X"04"),
+	(X"7e" & X"0c"),
+	(X"7f" & X"16"),
+	(X"80" & X"2a"),
+	(X"81" & X"4e"),
+   (X"82" & X"61"),
+	(X"83" & X"6f"),
+	(X"84" & X"7b"),
+	(X"85" & X"86"),
+	(X"86" & X"8e"),
+	(X"87" & X"97"),
+	(X"88" & X"a4"),
+	(X"89" & X"af"),
+	(X"8a" & X"c5"),
+	(X"8b" & X"d7"),
+	(X"8c" & X"e8"),
+	(X"8d" & X"20"),
+	(X"0c" & X"90"),
+	(X"2b" & X"00"), 
+	(X"22" & X"7f"),
+	(X"23" & X"03"),
+	(X"11" & X"04"), -- should work for 30fps fint = 24 * (4/(5*2)) = 9.6mhz
+	(X"0c" & X"d0"),
+	(X"64" & X"ff"),
+	(X"0d" & X"41"),
+	(X"14" & X"41"),
+	(X"0e" & X"cd"),
+	(X"ac" & X"bf"),
+	(X"8e" & X"00"),	-- De-noise threshold - jfrancois X"00 - orig X"04
+	(X"0c" & X"d0" ),
+	(X"a6" & X"02" ), --enabling dsp
+	(X"a7" & X"20" ), -- experiencing with sat values
+	(X"a8" & X"20" ), -- experiencing with sat values 
+	(X"FF" & X"FF" )
+);
+
+	begin
+	
+	
+	-- rom_process
+	process(clk)
+		 begin
+		 if clk'event and clk = '1' then
+			if en = '1' then
+				data <= rom(conv_integer(addr)) ;
+			end if;
+		 end if;
+		 end process;  
+	
+end ov7725_qvga_patched ;
