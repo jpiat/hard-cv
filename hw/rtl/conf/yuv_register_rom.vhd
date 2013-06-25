@@ -401,7 +401,7 @@ end ov7670_vga ;
 
 architecture ov7725_qvga of yuv_register_rom is
  
-	type reg_array is array (0 to 77) of std_logic_vector(15 downto 0 ); 
+	type reg_array is array (0 to 74) of std_logic_vector(15 downto 0 ); 
 	
 	
 	-- CONFIGURATION TAKEN FROM ov534.c IN LINUX KERNEL DRIVERS
@@ -433,8 +433,8 @@ architecture ov7725_qvga of yuv_register_rom is
 	( X"2a" & X"00"),
 	( X"2b" & X"00"),
 	( X"6b" & X"aa"),
-	( X"13" & X"ff"),		-- AWB 
-	--( X"13" & X"fD"),		-- no AWB 
+	--( X"13" & X"ff"),		-- AWB 
+	( X"13" & X"fD"),		-- no AWB 
 	( X"90" & X"05"),
 	( X"91" & X"01"),
 	( X"92" & X"03"),
@@ -485,9 +485,9 @@ architecture ov7725_qvga of yuv_register_rom is
 	( X"0c" & X"d0"),
 	--( X"0c" & X"10"),
 	( X"3e" & X"88"),
-	(X"a6" & X"02" ), --enabling dsp
-	(X"a7" & X"20" ), -- experiencing with sat values
-	(X"a8" & X"20" ), -- experiencing with sat values 
+	--(X"a6" & X"02" ), --enabling dsp
+	--(X"a7" & X"20" ), -- experiencing with sat values
+	--(X"a8" & X"20" ), -- experiencing with sat values 
 	( X"FF" & X"FF" )
 );
 
