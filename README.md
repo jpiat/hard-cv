@@ -24,4 +24,4 @@ These IPs are free to use, don't hesitate to contact me for any problem.
 
 
 Projects using this library :
-	- logi-boards : a family of psartan6 based board that connect to raspberry-pi, beaglebone.
+- logi-boards : a family of psartan6 based board that connect to raspberry-pi, beaglebone.
