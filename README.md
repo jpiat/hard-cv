@@ -10,11 +10,11 @@ The project is divided into different operators set :
 - com : defines protocol for communication outside the FPGA
 - conf : defines configuration set for camera and display
 - image : contains basic building blocks for image processing tasks
-	image/filter : image filtering components (gaussian, sobel, thresholding, erode, dilate ...)
-	image/feature : feature detection and processing in images (harris, brief descriptor/correlator,...)
-	image/classifier : classification algorithm (color classifier)
-	image/blob : blob detection algorithm
-	image/graphic : drawing functions
+	- image/filter : image filtering components (gaussian, sobel, thresholding, erode, dilate ...)
+	- image/feature : feature detection and processing in images (harris, brief descriptor/correlator,...)
+	- image/classifier : classification algorithm (color classifier)
+	- image/blob : blob detection algorithm
+	- image/graphic : drawing functions
 - interface : component to interface FPGA to sensors (camera), display and processor (spi, memory-bus, i2c)
 - primitive : components to instantiate FPGA resources (memory, multipliers)
 - utils : all application agnostic components (fifo, counter, registers, delay ...)
