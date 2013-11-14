@@ -433,8 +433,8 @@ architecture ov7725_qvga of yuv_register_rom is
 	( X"2a" & X"00"),
 	( X"2b" & X"00"),
 	( X"6b" & X"aa"),
-	--( X"13" & X"ff"),		-- AWB 
-	( X"13" & X"fD"),		-- no AWB 
+	( X"13" & X"ff"),		-- AWB 
+	--( X"13" & X"fD"),		-- no AWB 
 	( X"90" & X"05"),
 	( X"91" & X"01"),
 	( X"92" & X"03"),
@@ -485,6 +485,9 @@ architecture ov7725_qvga of yuv_register_rom is
 	( X"0c" & X"d0"),
 	--( X"0c" & X"10"),
 	( X"3e" & X"88"),
+	--( X"01" & X"10"), -- B gain
+	--( X"02" & X"35"), -- R gain
+	--( X"03" & X"45"), -- G gain
 	--(X"a6" & X"02" ), --enabling dsp
 	--(X"a7" & X"20" ), -- experiencing with sat values
 	--(X"a8" & X"20" ), -- experiencing with sat values 
@@ -608,13 +611,13 @@ end ov7725_vga ;
 
 architecture ov7725_qvga_patched of yuv_register_rom is
  
-	type reg_array is array (0 to 77) of std_logic_vector(15 downto 0 ); 
+	type reg_array is array (0 to 78) of std_logic_vector(15 downto 0 ); 
 	
 	
 	-- CONFIGURATION TAKEN FROM ov534.c IN LINUX KERNEL DRIVERS
 	signal rom : reg_array :=( 
 	( X"12" & X"80"), -- reset all registers
-	( X"12" & X"40"), -- reset all registers
+	( X"12" & X"40"), -- set qvga
 	(X"11" & X"01"),
 	(X"3d" & X"03"),
 	(X"17" & X"3f"),
@@ -628,6 +631,7 @@ architecture ov7725_qvga_patched of yuv_register_rom is
 	(X"11" & X"01"),
 	(X"42" & X"7f"),
 	(X"63" & X"AA"), 	-- AWB
+	--(X"63" & X"00"), 	-- AWB
 	(X"64" & X"ff"),
 	(X"66" & X"00"),
 	(X"13" & X"f0"),	-- COM8  - jfrancois X"f0	orig x0f7
@@ -654,8 +658,8 @@ architecture ov7725_qvga_patched of yuv_register_rom is
 	(X"98" & X"62"),
 	(X"99" & X"80"),
 	(X"9a" & X"1e"),
-	(X"9b" & X"08"),
-	(X"9c" & X"20"),
+	(X"9b" & X"48"),-- brightness control
+	(X"9c" & X"25"),-- contrast control
 	(X"9e" & X"81"),
 	(X"a6" & X"04"),
 	(X"7e" & X"0c"),
@@ -678,6 +682,7 @@ architecture ov7725_qvga_patched of yuv_register_rom is
 	(X"2b" & X"00"), 
 	(X"22" & X"7f"),
 	(X"23" & X"03"),
+	--( X"11" & X"09"), -- should work for 15fps fint = 24 * (4/(10*2)) = 4.8mhz
 	(X"11" & X"04"), -- should work for 30fps fint = 24 * (4/(5*2)) = 9.6mhz
 	(X"0c" & X"d0"),
 	(X"64" & X"ff"),
@@ -687,9 +692,10 @@ architecture ov7725_qvga_patched of yuv_register_rom is
 	(X"ac" & X"bf"),
 	(X"8e" & X"00"),	-- De-noise threshold - jfrancois X"00 - orig X"04
 	(X"0c" & X"d0" ),
-	(X"a6" & X"02" ), --enabling dsp
-	(X"a7" & X"20" ), -- experiencing with sat values
-	(X"a8" & X"20" ), -- experiencing with sat values 
+	(X"a6" & X"07" ), --enabling dsp
+	(X"ab" & X"0b" ), --disabling brightness control
+	(X"a7" & X"30" ), -- experiencing with sat values
+	(X"a8" & X"30" ), -- experiencing with sat values 
 	(X"FF" & X"FF" )
 );
 

@@ -63,31 +63,35 @@ add_latch0 : generic_latch
            d => data((ADDR_WIDTH - 1) downto 0),
            q => addr_bus);
 
-process(ext_clk , resetn)
-begin
-if resetn ='0' then
-	wrt <= '0' ;
-	rdt <= '0' ;
-	data_bus_out_t <= (others => 'Z');
-elsif ext_clk'event and ext_clk  ='1' then
-	wrt <= (NOT wrn) and (NOT csn) and (NOT latch_addr) ;
-	rdt <= (NOT oen) and (NOT csn)  and (NOT latch_addr) ;
-	if latch_addr = '0' and wrn = '0' and csn = '0' then
-		data_bus_out_t <= data ;
-	end if ;
-end if ;
-end process;
+--process(ext_clk , resetn)
+--begin
+--if resetn ='0' then
+--	wrt <= '0' ;
+--	rdt <= '0' ;
+--	data_bus_out_t <= (others => 'Z');
+--elsif ext_clk'event and ext_clk  ='1' then
+--	wrt <= (NOT wrn) and (NOT csn) and (NOT latch_addr) ;
+--	rdt <= (NOT oen) and (NOT csn)  and (NOT latch_addr) ;
+--	if latch_addr = '0' and wrn = '0' and csn = '0' then
+--		data_bus_out_t <= data ;
+--	end if ;
+--end if ;
+--end process;
 
-process(clk , resetn)
-begin
-	if resetn ='0' then
-		wr <= '0' ;
-		rd <= '0' ;
-	elsif clk'event and clk ='1' then
-		wr <= wrt ;
-		rd <= rdt ;
-	end if ;
-end process;
+data_bus_out_t <= data when latch_addr = '0' and wrn = '0' and csn = '0' else
+					   (others => '0') ;
+wr <= (NOT wrn) and (NOT csn) and (NOT latch_addr) ;
+rd <= (NOT oen) and (NOT csn)  and (NOT latch_addr) ;
+--process(clk , resetn)
+--begin
+--	if resetn ='0' then
+--		wr <= '0' ;
+--		rd <= '0' ;
+--	elsif clk'event and clk ='1' then
+--		wr <= wrt ;
+--		rd <= rdt ;
+--	end if ;
+--end process;
 
 
 

@@ -23,7 +23,7 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 
 library work ;
-use work.utils_pack.all ;
+use work.control_pack.all ;
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --use IEEE.NUMERIC_STD.ALL;
@@ -73,7 +73,7 @@ process(clk, resetn)
 begin
 	if resetn = '0' then	
 		period_q <= (others => '0');
-		pulse_width_q <= (others => '0');
+		pulse_width_q <= (others => (others => '0'));
 	elsif clk'event and clk = '1' then
 		if period_counter = 0 then
 			period_q <= period ;

@@ -90,14 +90,14 @@ linesn: dpram_NxN
  		a => pixel_counterq_delayed
 	); 
 
-gen_mem_output : for I in 0 to (N - 2) generate
+gen_mem_output_0 : for I in 0 to (N - 2) generate
 	LINEI_OUTPUT(I)(7 downto 0) <= OUTPUT_LINES(((I*8)+7) downto (I*8));
 	LINEI_OUTPUT(I)(8)  <= '0' ;
-end generate gen_mem_output;	
+end generate gen_mem_output_0;	
 
-gen_mem_input : for I in 0 to (N - 2) generate
+gen_mem_input_0 : for I in 0 to (N - 2) generate
 	INPUT_LINES(((I*8)+7) downto (I*8)) <= std_blockNxN(I+1, N-1)(7 downto 0) ;
-end generate gen_mem_input;	
+end generate gen_mem_input_0;	
 
  
 lpixel_data <= ( '0' & pixel_data_in) ;

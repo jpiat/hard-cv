@@ -56,6 +56,20 @@ component classifier_lut is
 	);
 end component;
 
+
+component yuv_classifier is
+	port(
+		clk, resetn : in std_logic ;
+		we, cs : in std_logic ;
+		bus_addr : in std_logic_vector(15 downto 0);
+		data_in : in std_logic_vector(15 downto 0);
+		data_out : out std_logic_vector(15 downto 0);
+		
+		y_value, u_value, v_value : in std_logic_vector(7 downto 0);
+		class_value : out std_logic_vector(2 downto 0)
+	);
+end component;
+
 end classifier_pack;
 
 package body classifier_pack is

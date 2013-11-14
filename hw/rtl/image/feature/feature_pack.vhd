@@ -145,19 +145,24 @@ component HARRIS_RESPONSE is
 	);
 end component;
 
-
 component HARRIS_TESSELATION is
-	generic(WIDTH : positive := 640 ; HEIGHT : positive := 480; TILE_NBX : positive := 8 ; TILE_NBY : positive := 6 ; IGNORE_STRIPES : positive := 5 );
+	generic(WIDTH : positive := 640 ;
+			HEIGHT : positive := 480; 
+			TILE_NBX : positive := 8 ; 
+			TILE_NBY : positive := 6 ; 
+			IGNORE_STRIPES : positive := 5;
+			DESCRIPTOR_SIZE :  positive :=  128);
 	port (
 			clk : in std_logic; 
 			resetn : in std_logic; 
 			pixel_clock, hsync, vsync : in std_logic; 
+			feature_desc_in : in std_logic_vector(DESCRIPTOR_SIZE-1 downto 0);
 			harris_score_in : in std_logic_vector(15 downto 0 ); 
-			feature_coordx	:	out std_logic_vector((nbit(WIDTH) - 1) downto 0 );
-			feature_coordy	:	out std_logic_vector((nbit(HEIGHT) - 1) downto 0 );
-			end_of_block	:	out std_logic ;
+			feature_coordx	:	out std_logic_vector(7 downto 0 ) ;
+			feature_coordy	:	out std_logic_vector(7 downto 0 ) ;
+			feature_desc_out : out std_logic_vector((DESCRIPTOR_SIZE -1) downto 0) ;
 			harris_score_out	: 	out std_logic_vector(15 downto 0 );
-			latch_maxima	:	out std_logic 
+			end_of_block	:	out std_logic 
 	);
 end component;
 

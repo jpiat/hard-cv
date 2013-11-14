@@ -182,26 +182,26 @@ port(clk, resetn : in std_logic ;
 end component;
 
 component small_fifo is
-generic( WIDTH : positive := 8 ; DEPTH : positive := 8);
+generic( WIDTH : positive := 8 ; DEPTH : positive := 8; THRESHOLD : positive := 4);
 port(clk, resetn : in std_logic ;
 	  push, pop : in std_logic ;
-	  full, empty : out std_logic ;
+	  full, empty, limit : out std_logic ;
 	  data_in : in std_logic_vector( WIDTH-1 downto 0);
 	  data_out : out std_logic_vector(WIDTH-1 downto 0)
 	  );
 end component;
 
 
-component pwm is
-generic(NB_CHANNEL : positive := 1);
-port(
-	clk, resetn : in std_logic ;
-	divider : in std_logic_vector(15 downto 0);
-	period : in std_logic_vector(15 downto 0);
-	pulse_width : in slv16_array(0 to NB_CHANNEL-1) ;
-	pwm : out std_logic_vector(0 to NB_CHANNEL-1) 
-);
-end component;
+--component pwm is
+--generic(NB_CHANNEL : positive := 1);
+--port(
+--	clk, resetn : in std_logic ;
+--	divider : in std_logic_vector(15 downto 0);
+--	period : in std_logic_vector(15 downto 0);
+--	pulse_width : in slv16_array(0 to NB_CHANNEL-1) ;
+--	pwm : out std_logic_vector(0 to NB_CHANNEL-1) 
+--);
+--end component;
 
 end utils_pack;
 

@@ -30,10 +30,10 @@ use IEEE.STD_LOGIC_1164.ALL;
 --use UNISIM.VComponents.all;
 
 entity small_fifo is
-generic( WIDTH : positive := 8 ; DEPTH : positive := 8);
+generic( WIDTH : positive := 8 ; DEPTH : positive := 8; THRESHOLD : positive := 4);
 port(clk, resetn : in std_logic ;
 	  push, pop : in std_logic ;
-	  full, empty : out std_logic ;
+	  full, empty, limit : out std_logic ;
 	  data_in : in std_logic_vector( WIDTH-1 downto 0);
 	  data_out : out std_logic_vector(WIDTH-1 downto 0)
 	  );
@@ -72,6 +72,9 @@ empty_t <= '1' when nb_available = 0 else
 			 '0' ;
 data_out <= fifo(rd_ptr) when empty_t = '0' else
 				(others => '0');
+				
+limit <= '1' when nb_available >= THRESHOLD else
+			'0' ;
 				
 empty <= empty_t ;
 full <= full_t ;

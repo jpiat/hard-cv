@@ -92,7 +92,7 @@ v_latch_a : generic_latch
            d => pixel_data , 
            q => v_data_a);
 			  
-v_latch : generic_latch 
+v_latch_b : generic_latch 
 	 generic map( NBIT => 8)
     port map( clk => pxclk,
            resetn => resetn ,

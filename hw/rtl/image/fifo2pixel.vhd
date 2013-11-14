@@ -39,14 +39,15 @@ entity fifo2pixel is
 	port(
 		clk, resetn : in std_logic ;
 		
-		
-		-- fifo side
-		fifo_empty : in std_logic ;
+	
 		fifo_rd : out std_logic ;
 		fifo_data : in std_logic_vector(15 downto 0);
 		
+		-- 
+      line_available : in std_logic ;		
+
+		
 		-- pixel side 
-		pixel_clk : in std_logic ;
 		y_data : out std_logic_vector(7 downto 0 );  
  		pixel_clock_out, hsync_out, vsync_out : out std_logic
 	
@@ -65,24 +66,30 @@ signal vsync_out_falling_edge, vsync_out_old : std_logic ;
 signal fifo_rdq, fifo_rd_old, fifo_rd_rising_edge: std_logic ;
 signal pixel_en : std_logic ;
 signal counter_output : std_logic_vector(3 downto 0) ;
+
+signal cycle_counter : std_logic_vector(2 downto 0);
+signal pixel_clk : std_logic ;
 begin
 
+
+process(clk, resetn)
+begin	
+	if resetn = '0' then
+		cycle_counter <= (others => '0') ;
+	elsif clk'event and clk = '1' then
+		cycle_counter <= cycle_counter + 1 ;
+	end if ;
+end process ;
+pixel_clk <= cycle_counter(1);
 
 process(pixel_clk, resetn)
 begin	
 	if resetn = '0' then
 		pixel_en <= '0' ;
-		--hsync_outq_latched <= '1' ;
-		--vsync_outq_latched <= '1' ;
 	elsif pixel_clk'event and pixel_clk = '1' then
 		pixel_en <= (not pixel_en) ;
-		--hsync_outq_latched <= hsync_outq ;
-		--vsync_outq_latched <= vsync_outq ;
 	end if ;
 end process ;
-
-
-
 
 hsync_outq_latched <= hsync_outq ;
 vsync_outq_latched <= vsync_outq ;
@@ -103,16 +110,6 @@ begin
 	end if ;
 end process ;
 
-
-
-empty_latch : generic_latch
-	 generic map(NBIT => 1)
-    port map( clk => pixel_en ,
-           resetn => resetn ,
-           sraz => '0' ,
-           en => '1',
-           d(0) => fifo_empty,
-           q(0) => fifo_empty_latched );
 			  
 hsync_outq <= '1' when hsync_count < 20 else
 				'1' when pixel_count > (WIDTH - 1) else
@@ -122,15 +119,11 @@ hsync_outq <= '1' when hsync_count < 20 else
 vsync_outq <= '1' when hsync_count < 4   else --when hsync_count > 1 and 
 				'0' ;
 				
-pixel_clock_outq <= (not pixel_en) when hsync_outq_latched = '0' and fifo_empty_latched = '0' else
-						 (not pixel_en) when hsync_outq_latched = '0' and pixel_count(0) =  '1' else
-						 '0' ;
+pixel_clock_outq <= (not pixel_en) ;
 						
 				
-en_pixel_count <= '1' when fifo_empty_latched = '0' else
-						'1' when fifo_empty_latched = '1' and pixel_count(0) =  '1' else
-						'1' when hsync_outq_latched = '1' and fifo_empty_latched = '0' else
-						'0' ;
+en_pixel_count <= '0' when hsync_outq_latched = '1' and line_available = '0' else
+						'1' ;
 						
 sraz_pixel_count <= '1' when pixel_count = (WIDTH + 45) else
 						'0' ;
@@ -138,7 +131,7 @@ sraz_pixel_count <= '1' when pixel_count = (WIDTH + 45) else
 sraz_hsync_count <= '1' when hsync_count = (HEIGHT + 22 ) else
 						  '0' ;
 	
-fifo_rdq <= 	(pixel_en) when hsync_outq_latched = '0' and pixel_count(0) =  '1' else 
+fifo_rdq <= 	(pixel_en) when hsync_outq_latched = '0' and pixel_count(0) =  '0' else 
 				   '0' ; -- to read first data ...
 					
 fifo_rd <= fifo_rdq ;		
@@ -154,8 +147,7 @@ pixel_counter : simple_counter
            Q => pixel_count
 			  );
 			  
-en_hsync_count <= '0' when fifo_empty_latched = '1' and vsync_outq_latched = '1'  else
-						sraz_pixel_count ;
+en_hsync_count <= sraz_pixel_count ;
 
 			  
 hsync_counter : simple_counter
@@ -185,10 +177,7 @@ begin
 end process ;
 fifo_rd_rising_edge <= (not fifo_rd_old) and fifo_rdq ;
 
- 
-
-
-pixel_value <= pixel_value0 when pixel_count(0) = '0' else
+pixel_value <= pixel_value0 when pixel_count(0) = '1' else
 			 pixel_value1 ;
 
 end Behavioral;

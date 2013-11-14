@@ -35,17 +35,23 @@ use work.primitive_pack.all ;
 --use UNISIM.VComponents.all;
 
 entity HARRIS_TESSELATION is
-	generic(WIDTH : positive := 640 ; HEIGHT : positive := 480; TILE_NBX : positive := 8 ; TILE_NBY : positive := 6 ; IGNORE_STRIPES : positive := 5 );
+	generic(WIDTH : positive := 640 ;
+			HEIGHT : positive := 480; 
+			TILE_NBX : positive := 8 ; 
+			TILE_NBY : positive := 6 ; 
+			IGNORE_STRIPES : positive := 5;
+			DESCRIPTOR_SIZE :  positive :=  128);
 	port (
 			clk : in std_logic; 
 			resetn : in std_logic; 
 			pixel_clock, hsync, vsync : in std_logic; 
+			feature_desc_in : in std_logic_vector(DESCRIPTOR_SIZE-1 downto 0);
 			harris_score_in : in std_logic_vector(15 downto 0 ); 
-			feature_coordx	:	out std_logic_vector((nbit(WIDTH) - 1) downto 0 );
-			feature_coordy	:	out std_logic_vector((nbit(HEIGHT) - 1) downto 0 );
-			end_of_block	:	out std_logic ;
+			feature_coordx	:	out std_logic_vector(7 downto 0 ) ;
+			feature_coordy	:	out std_logic_vector(7 downto 0 ) ;
+			feature_desc_out : out std_logic_vector((DESCRIPTOR_SIZE -1) downto 0) ;
 			harris_score_out	: 	out std_logic_vector(15 downto 0 );
-			latch_maxima	:	out std_logic 
+			end_of_block	:	out std_logic 
 	);
 end HARRIS_TESSELATION;
 
@@ -63,7 +69,7 @@ architecture Behavioral of HARRIS_TESSELATION is
 	signal highest_score : std_logic_vector(15 downto 0);
 	signal top_left_cornerx	:	std_logic_vector((nbit(WIDTH) - 1) downto 0);
 	signal top_left_cornery : std_logic_vector((nbit(HEIGHT) - 1) downto 0);
-	signal ram_in, ram_out : std_logic_vector(31 downto 0);
+	signal ram_in, ram_out : std_logic_vector((32+ DESCRIPTOR_SIZE)-1 downto 0);
 	signal new_high_score : std_logic ;
 	signal hsync_old, hsync_fe, hsync_re : std_logic ;
 begin
@@ -84,35 +90,36 @@ hsync_fe <= hsync_old and (not hsync) ;
 hsync_re <= (NOT hsync_old) and hsync ;
 
 
--- storing score (pox in bloc, posy in block , score)
-ram_in <= (std_logic_vector(to_unsigned(0, 32 - (1 + nbit(WIDTH/TILE_NBX) + nbit(WIDTH/TILE_NBY) + 16)))& '1' & block_ypos & block_xpos & harris_score_in) when block_xaddress_old = block_xaddress else
-			 (others => '0');
+			 
 
-highest_score <= ram_out(15 downto 0) ;
-high_score_xpos <= ram_out(((nbit(WIDTH/TILE_NBX) + 16) - 1) downto 16);
-high_score_ypos <= ram_out(((nbit(WIDTH/TILE_NBY) + (nbit(WIDTH/TILE_NBX) + 16)) - 1) downto (nbit(WIDTH/TILE_NBX) + 16));
+ram_in((32+DESCRIPTOR_SIZE) - 1 downto 32) <=  		feature_desc_in ;
+ram_in(31 downto 16) <= harris_score_in ;	 
+ram_in(15 downto 8) <= std_logic_vector(RESIZE(unsigned(block_ypos), 8)) ;	 
+ram_in(7 downto 0) <= std_logic_vector(RESIZE(unsigned(block_xpos), 8)) ;			 
+
+highest_score <= ram_out(31 downto 16) ;
+high_score_xpos <= std_logic_vector(RESIZE(unsigned(ram_out(7 downto 0)), nbit(WIDTH/TILE_NBX)));
+high_score_ypos <= std_logic_vector(RESIZE(unsigned(ram_out(15 downto 8)), nbit(HEIGHT/TILE_NBY)));
 
 
 -- score is out is highest score or new high score
 harris_score_out <= harris_score_in when signed(harris_score_in) > signed(highest_score) else	
 						  highest_score ;
 -- feature coord x, is high score pos in block + block coord 						  
-feature_coordx <= high_score_xpos + top_left_cornerx ;
-feature_coordy <= high_score_ypos + top_left_cornery ;
+feature_coordx <= std_logic_vector(RESIZE(unsigned(high_score_xpos), 8)) ;
+feature_coordy <= std_logic_vector(RESIZE(unsigned(high_score_ypos), 8)) ;
 
 
 -- new high score is latched if we enter new block or if current socre is higher than igher score
 new_high_score <= '1' when block_xaddress_old /= block_xaddress and block_ypos = 0	 else
 						'0' when ((unsigned(pixel_count) < IGNORE_STRIPES) OR (unsigned(line_count) < IGNORE_STRIPES)) else
 						'1' when signed(harris_score_in) > signed(highest_score) else				
-						'0';
-						
-latch_maxima <= new_high_score ;
+						'0' ;
 
 
 -- contains current line of blocks maxima
 score_ram : dpram_NxN
-	generic map(SIZE => TILE_NBX , NBIT => 32 , ADDR_WIDTH => nbit(TILE_NBX))
+	generic map(SIZE => TILE_NBX , NBIT => 32+DESCRIPTOR_SIZE , ADDR_WIDTH => nbit(TILE_NBX))
 	port map(
  		clk => clk,  
  		we => new_high_score,
