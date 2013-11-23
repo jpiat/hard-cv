@@ -40,6 +40,7 @@ port(
 	wr_bus, rd_bus, cs_bus : in std_logic ;
 	data_bus_in	: in std_logic_vector((WIDTH - 1) downto 0); -- bus interface
 	data_bus_out	: out std_logic_vector((WIDTH - 1) downto 0); -- bus interface
+	latch_default : in  std_logic_vector((WIDTH - 1) downto 0); 
 	latch_input : in  std_logic_vector((WIDTH - 1) downto 0);
 	latch_output :out  std_logic_vector((WIDTH - 1) downto 0)
 );

@@ -29,7 +29,8 @@ port(
 	data_bus_out	: out std_logic_vector((WIDTH - 1) downto 0); -- bus interface
 	inputB: in std_logic_vector((WIDTH - 1) downto 0); -- logic interface
 	outputA	: out std_logic_vector((WIDTH - 1) downto 0); -- logic interface
-	emptyA, fullA, emptyB, fullB, burst_available_B :	out std_logic 
+	emptyA, fullA, emptyB, fullB, burst_available_B :	out std_logic;
+	fifoA_reset, fifoB_reset : out std_logic
 );
 end component;
 
@@ -41,6 +42,7 @@ port(
 	wr_bus, rd_bus, cs_bus : in std_logic ;
 	data_bus_in	: in std_logic_vector((WIDTH - 1) downto 0); -- bus interface
 	data_bus_out	: out std_logic_vector((WIDTH - 1) downto 0); -- bus interface
+	latch_default : in  std_logic_vector((WIDTH - 1) downto 0); 
 	latch_input : in  std_logic_vector((WIDTH - 1) downto 0);
 	latch_output :out  std_logic_vector((WIDTH - 1) downto 0)
 );
@@ -54,6 +56,7 @@ port(
 	wr_bus, rd_bus, cs_bus : in std_logic ;
 	data_bus_in	: in std_logic_vector((WIDTH - 1) downto 0); -- bus interface
 	data_bus_out	: out std_logic_vector((WIDTH - 1) downto 0); -- bus interface
+	latch_default : in  reg16_array(0 to (NB-1)) := (others =>(others => '0')) ;
 	latch_input : in  reg16_array(0 to (NB-1));
 	latch_output :out  reg16_array(0 to (NB-1))
 );

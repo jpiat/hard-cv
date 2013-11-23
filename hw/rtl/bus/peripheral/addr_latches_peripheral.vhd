@@ -43,6 +43,7 @@ port(
 	wr_bus, rd_bus, cs_bus : in std_logic ;
 	data_bus_in	: in std_logic_vector((WIDTH - 1) downto 0); -- bus interface
 	data_bus_out	: out std_logic_vector((WIDTH - 1) downto 0); -- bus interface
+	latch_default : in  reg16_array(0 to (NB-1)) := (others =>(others => '0')) ;
 	latch_input : in  reg16_array(0 to (NB-1));
 	latch_output :out  reg16_array(0 to (NB-1))
 );
@@ -63,6 +64,7 @@ gen_latches : for i in 0 to (NB-1) generate
 			wr_bus => wr_bus, rd_bus => rd_bus, cs_bus => cs_vector(i),
 			data_bus_in	=> data_bus_in,
 			data_bus_out => latches_outs(i),
+			latch_default => latch_default(i),
 			latch_input => latch_input(i),
 			latch_output => latch_output(i)
 		);

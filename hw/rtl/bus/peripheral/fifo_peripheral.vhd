@@ -45,7 +45,8 @@ port(
 	data_bus_out	: out std_logic_vector((WIDTH - 1) downto 0); --! output data bus
 	inputB: in std_logic_vector((WIDTH - 1) downto 0); --! data input of fifo B
 	outputA	: out std_logic_vector((WIDTH - 1) downto 0); --! data output of fifo A
-	emptyA, fullA, emptyB, fullB, burst_available_B	:	out std_logic --! fifo state signals
+	emptyA, fullA, emptyB, fullB, burst_available_B	:	out std_logic; --! fifo state signals
+	fifoA_reset, fifoB_reset : out std_logic 
 );
 end fifo_peripheral;
 
@@ -92,7 +93,7 @@ fifo_B : dp_fifo -- read from bus, write from logic
 		nb_available => nb_availableB(nbit(SIZE)  downto 0)
 	); 
 
-latch_registers <= NOT rd_bus ;
+--latch_registers <= NOT rd_bus ;
 	  
 --nb_available_latch0 : generic_latch 
 --	 generic map(NBIT => WIDTH)
@@ -141,6 +142,9 @@ srazA <= '1' when bus_cs = '1' and rd_bus = '0' and wr_bus = '1' and in_addr(add
 
 srazB <= '1' when bus_cs = '1' and rd_bus = '0' and wr_bus = '1' and in_addr(address_space_nbit-1) = '1' and in_addr(1 downto 0) = "10" else
 			'0' ;
+				
+fifoA_reset <= 	srazA ;
+fifoB_reset	<= 	srazB ;		
 				
 fifoA_in <= data_bus_in ;
 
