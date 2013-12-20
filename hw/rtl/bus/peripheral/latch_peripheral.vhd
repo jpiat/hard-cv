@@ -64,7 +64,7 @@ data_bus_out <= inputq when cs_bus = '1' else
 process(clk, resetn)
 begin
 	if resetn = '0' then
-		outputq <= (others => '0');
+		outputq <= latch_default;
 	elsif clk'event and clk = '1' then
 		if wr_bus = '1' and cs_bus = '1' then
 			outputq <= data_bus_in ;

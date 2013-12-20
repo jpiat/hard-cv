@@ -80,7 +80,7 @@ begin
 		cycle_counter <= cycle_counter + 1 ;
 	end if ;
 end process ;
-pixel_clk <= cycle_counter(1);
+pixel_clk <= cycle_counter(0);
 
 process(pixel_clk, resetn)
 begin	

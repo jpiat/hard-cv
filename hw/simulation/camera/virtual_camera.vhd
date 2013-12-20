@@ -66,6 +66,7 @@ read_file:
 				else
 						hsync_out <= '1' ;
 				end if ;
+				
 
 				if line_count < 3 then
 					vsync_out <= '1' ;
@@ -86,6 +87,10 @@ read_file:
 				  px_count := px_count + 1 ;
 				end if ;
 				wait for PERIOD/2;
+				if line_count >= 266 then
+					line_count := 0;
+					px_count := 0;
+				end if;
       end loop;
 		
 		

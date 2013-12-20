@@ -26,9 +26,9 @@ architecture systemc of yuv_camera_interface is
 	signal en_ylatch, en_ulatch, en_vlatch, en_dec_uv : std_logic ;
 	signal hsynct, vsynct, pxclkt, pixel_clock_out_t  : std_logic ;
 	signal vsync_d, href_d : std_logic ;
-	signal y_data_a, y_data_b : std_logic_vector(7 downto 0);
-	signal u_data_a : std_logic_vector(7 downto 0);
-	signal v_data_a : std_logic_vector(7 downto 0);
+	signal y_data_a, y_data_b, y_data_c : std_logic_vector(7 downto 0);
+	signal u_data_a, u_data_b: std_logic_vector(7 downto 0);
+	signal v_data_a, v_data_b: std_logic_vector(7 downto 0);
 	
 	
 	signal pclk_set, pclk_reset, first_pixeln : std_logic ;
@@ -63,7 +63,7 @@ y_latch_c : generic_latch
            sraz => '0' ,
            en => en_ylatch ,
            d => y_data_b , 
-           q => y_data);
+           q => y_data_c);
 			  
 u_latch : generic_latch 
 	 generic map( NBIT => 8)
@@ -81,7 +81,7 @@ u_latch_b : generic_latch
            sraz => '0' ,
            en => en_dec_uv ,
            d => u_data_a , 
-           q => u_data);
+           q => u_data_b);
 
 v_latch_a : generic_latch 
 	 generic map( NBIT => 8)
@@ -99,7 +99,7 @@ v_latch_b : generic_latch
            sraz => '0' ,
            en => en_dec_uv ,
            d => v_data_a , 
-           q => v_data);
+           q => v_data_b);
 
 	delay_sync : generic_delay
 		generic map( WIDTH => 2, DELAY => 3)
@@ -117,11 +117,19 @@ v_latch_b : generic_latch
 				hsynct <= '0' ;
 				vsynct <= '0' ;
 				pxclkt <= '0' ;
+				y_data <= (others => '0') ; 
+				u_data <= (others => '0') ;
+				v_data <= (others => '0') ;
 				pixel_clock_out_t <= '0' ;
 		 	elsif  clock'event and clock = '1'  then
 				hsynct <= NOT href_d ; -- changing href into hsync
 				vsynct <= vsync_d ;
 				pxclkt <= pxclk ;
+				if cpt_nb_pixel(0) = '1' then
+					y_data <= y_data_c ; 
+					u_data <= u_data_b ;
+					v_data <= v_data_b ;
+				end if ;
 				pixel_clock_out_t <= cpt_nb_pixel(0) ;
 			end if ;
 	end process ;

@@ -32,7 +32,7 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 entity yuv_pixel2fifo is
 port(
-	clk, resetn : in std_logic ;
+	clk, resetn, sreset : in std_logic ;
 	pixel_clock, hsync, vsync : in std_logic; 
 	pixel_y, pixel_u, pixel_v : in std_logic_vector(7 downto 0);
 	fifo_data : out std_logic_vector(15 downto 0);
@@ -45,7 +45,22 @@ architecture Behavioral of yuv_pixel2fifo is
 signal hsync_rising_edge, vsync_rising_edge, pxclk_rising_edge, hsync_old, vsync_old, pxclk_old: std_logic ;
 signal pixel_count :std_logic_vector(1 downto 0);
 signal write_pixel : std_logic ;
+signal enabled : std_logic ;
 begin
+
+
+process(clk, resetn)
+begin
+	if resetn = '0' then
+		enabled <= '0' ;
+	elsif clk'event and clk = '1' then
+		if sreset = '1' then
+			enabled <= '0' ;
+		elsif vsync = '1' then
+			enabled <= '1' ;
+		end if ;
+	end if ;
+end process ;
 
 process(clk, resetn)
 begin
@@ -92,7 +107,7 @@ begin
 end process ;
 write_pixel <= pxclk_rising_edge;
 
-fifo_wr <= write_pixel when vsync = '0' and hsync = '0' else
+fifo_wr <= write_pixel when vsync = '0' and hsync = '0' and enabled = '1' else
 			  vsync_rising_edge ;
 				
 fifo_data <= (pixel_v & pixel_y ) when pixel_count(0) = '0' and vsync = '0' else

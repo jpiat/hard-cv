@@ -291,7 +291,7 @@ end component;
 
 component yuv_pixel2fifo is
 port(
-	clk, resetn : in std_logic ;
+	clk, resetn, sreset : in std_logic ;
 	pixel_clock, hsync, vsync : in std_logic; 
 	pixel_y, pixel_u, pixel_v : in std_logic_vector(7 downto 0);
 	fifo_data : out std_logic_vector(15 downto 0);
