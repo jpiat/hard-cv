@@ -21,7 +21,7 @@ architecture ov7670_qvga of yuv_register_rom is
 	-- CONFIGURATION TAKEN FROM OV7670.c IN LINUX KERNEL DRIVERS
 	signal rom : array_160 :=( 
 	(X"12" & X"80"),
-	(X"11" & X"01"), -- OV: clock scale (30 fps)
+	(X"11" & X"01"), -- OV: clock scale (30 fps) -- 15fps with 0x03
 	(X"3a" & X"04"), -- OV
 	(X"12" & X"10"), -- QVGA
 	(X"8C" & X"00"), -- 
@@ -126,8 +126,8 @@ architecture ov7670_qvga of yuv_register_rom is
 	(X"6a" & X"40"), 
 	(X"01" & X"40"), -- REG BLUE
 	(X"02" & X"60"), -- REG_RED
-	--(X"13" & (X"80" OR X"40" OR X"20" OR X"04" OR X"01" OR X"02")), -- COM8 AWB AGC AEC
-	(X"13" & (X"80" OR X"40" OR X"20" OR X"04" OR X"01")), -- COM8 AGC AEC
+	(X"13" & (X"80" OR X"40" OR X"20" OR X"04" OR X"01" OR X"02")), -- COM8 AWB AGC AEC
+	--(X"13" & (X"80" OR X"40" OR X"20" OR X"04" OR X"01")), -- COM8 AGC AEC
 	--(X"13" & (X"80" OR X"40" OR X"20" OR X"04")), -- COM8 AGC
 	--(X"13" & (X"80" OR X"40" OR X"20" )), -- COM8
 	--(X"13" & (X"80" OR X"40" OR X"20" OR X"01" )), -- COM8 AEC (BEST CONFIG FOR LINE DETECTION)
@@ -470,8 +470,8 @@ architecture ov7725_qvga of yuv_register_rom is
 	( X"2b" & X"00"),
 	( X"22" & X"7f"),
 	( X"23" & X"03"),
-	--( X"11" & X"09"), -- should work for 15fps fint = 24 * (4/(10*2)) = 4.8mhz
-	( X"11" & X"04"), -- should work for 30fps fint = 24 * (4/(5*2)) = 9.6mhz
+	( X"11" & X"09"), -- should work for 15fps fint = 24 * (4/(10*2)) = 4.8mhz
+	--( X"11" & X"04"), -- should work for 30fps fint = 24 * (4/(5*2)) = 9.6mhz
 	--( X"11" & X"01"), -- should work for 75fps fint = 24 * (4/(2*2)) = 24mhz
 	--( X"11" & X"02"), -- should work for 50fps fint = 24 * (4/(3*2)) = 16mhz
 	( X"0c" & X"d0"),
