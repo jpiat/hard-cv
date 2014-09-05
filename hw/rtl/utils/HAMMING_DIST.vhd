@@ -66,7 +66,6 @@ begin
 				en => en,
 				vec1 => svec1((((i*4) + 4) - 1) downto (i*4)), vec2 => svec2((((i*4) + 4) - 1) downto (i*4)),
 				distance => distances_array(i) );
-			
 			if_zeroo : if i = 0 generate
 				distances_int(i)(nbit(WIDTH)-1 downto 4) <=  (others => '0') ;
 				distances_int(i)(3 downto 0) <=  distances_array(i)  ;
@@ -99,6 +98,7 @@ begin
 			if en_re = '1' then
 				svec1 <= vec1 ;
 				svec2 <= vec2 ;
+				distance_latched <= (others => '0');
 			else
 				distance_latched <= distance_i ;
 				svec1((WIDTH - 1) downto (WIDTH )-(WIDTH/CYCLES)) <=  (others => '0') ;
