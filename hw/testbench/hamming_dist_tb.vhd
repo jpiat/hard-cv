@@ -27,10 +27,13 @@
 --------------------------------------------------------------------------------
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
- 
+USE ieee.numeric_std.ALL;
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --USE ieee.numeric_std.ALL;
+
+library work ;
+use work.utils_pack.all ;
  
 ENTITY hamming_dist_tb IS
 END hamming_dist_tb;
@@ -40,16 +43,19 @@ ARCHITECTURE behavior OF hamming_dist_tb IS
     -- Component Declaration for the Unit Under Test (UUT)
  
     COMPONENT HAMMING_DIST
+	 generic(WIDTH: natural := 64; CYCLES : natural := 4);
     PORT(
          clk : IN  std_logic;
          resetn : IN  std_logic;
          en : IN  std_logic;
-         vec1 : IN  std_logic_vector(63 downto 0);
-         vec2 : IN  std_logic_vector(63 downto 0);
+         vec1 : IN  std_logic_vector(WIDTH-1 downto 0);
+         vec2 : IN  std_logic_vector(WIDTH-1 downto 0);
          dv : OUT  std_logic;
-         distance : OUT  std_logic_vector(5 downto 0)
+         distance : OUT  std_logic_vector(nbit(WIDTH)-1 downto 0)
         );
     END COMPONENT;
+	 
+	 	
     
 
    --Inputs
@@ -69,7 +75,9 @@ ARCHITECTURE behavior OF hamming_dist_tb IS
 BEGIN
  
 	-- Instantiate the Unit Under Test (UUT)
-   uut: HAMMING_DIST PORT MAP (
+   uut: HAMMING_DIST 
+	GENERIC MAP(WIDTH => 64, CYCLES => 4)
+	PORT MAP (
           clk => clk,
           resetn => resetn,
           en => en,
@@ -96,15 +104,16 @@ BEGIN
 		resetn <= '0' ;
       wait for 100 ns;	
 		resetn <= '1' ;
-      wait for clk_period*10;
 		vec1 <= X"FFFFFFFF8FFFFFFF" ;
 		vec2 <= X"FFFFFFFFFFFFFFFF" ;
-		en <= '1';
-		wait for clk_period ;
-		en <= '0';
-      -- insert stimulus here 
-
-      wait;
+      wait for clk_period*10;
+		while True loop
+			en <= '1';
+			wait for clk_period ;
+			en <= '0';
+			wait until dv = '1' ;
+			vec1 <= std_logic_vector(SHIFT_RIGHT(unsigned(vec1), 1));
+      end loop ;
    end process;
 
 END;
