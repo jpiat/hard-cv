@@ -259,7 +259,7 @@ port(
 );
 end component;
 
-component fifo2pixel is
+component fifo_to_y is
 	generic(WIDTH : positive := 320 ; HEIGHT : positive := 240);
 	port(
 		clk, resetn : in std_logic ;
@@ -277,7 +277,7 @@ component fifo2pixel is
 end component;
 
 
-component pixel2fifo is
+component y_to_fifo is
 generic(ADD_SYNC : boolean := false);
 port(
 	clk, resetn : in std_logic ;
@@ -290,7 +290,7 @@ port(
 end component;
 
 
-component yuv_pixel2fifo is
+component yuv_to_fifo is
 port(
 	clk, resetn, sreset : in std_logic ;
 	pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
