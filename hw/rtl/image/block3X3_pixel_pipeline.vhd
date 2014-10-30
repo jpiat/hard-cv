@@ -41,9 +41,9 @@ entity block3X3_pixel_pipeline is
 		  HEIGHT: natural := 480);
 		port(
 			resetn : in std_logic; 
-			pixel_clock, hsync, vsync : in std_logic;
-			pixel_clock_out, hsync_out, vsync_out : out std_logic;
-			pixel_data_in : in std_logic_vector(7 downto 0 ); 
+			pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic;
+			pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic;
+			pixel_in_data : in std_logic_vector(7 downto 0 ); 
 			block_out : out matNM(0 to 2, 0 to 2));
 end block3X3_pixel_pipeline;
 
@@ -70,7 +70,7 @@ signal enable_line0_latches, enable_line1_latches : std_logic ;
 
 signal nb_line : std_logic_vector((nbit(HEIGHT) - 1) downto 0) := (others => '0');
 signal pixel_counterq, pixel_counterq_m : std_logic_vector((nbit(WIDTH) - 1) downto 0) := (others => '0');
-signal hsync_delayed : std_logic ;
+signalpixel_in_hsync_delayed : std_logic ;
 
 begin
 
@@ -78,8 +78,8 @@ begin
 lines0: dpram_NxN
 	generic map(SIZE => WIDTH + 1 , NBIT => 16, ADDR_WIDTH => nbit(WIDTH))
 	port map(
- 		clk => pixel_clock, 
- 		we => NOT hsync_delayed ,
+ 		clk => pixel_in_clk, 
+ 		we => NOTpixel_in_hsync_delayed ,
  		spo => OUTPUT_LINES,
 		dpo => 	LINE_BUFFER,
  		di => INPUT_LINES,
@@ -87,7 +87,7 @@ lines0: dpram_NxN
  		a => (pixel_counterq)
 	); 
 	
-LINE_BUFFER_ADDR <= (others => '0') when hsync = '1' else
+LINE_BUFFER_ADDR <= (others => '0') whenpixel_in_hsync = '1' else
 							pixel_counterq + 1 ;
 	
 
@@ -99,15 +99,15 @@ LINE1_OUTPUT <= OUTPUT_LINES(7 downto 0);
 
 --LINE0_INPUT <= LINE1_OUTPUT;
 LINE0_INPUT <= LINE_BUFFER(7 downto 0);
-LINE1_INPUT <= pixel_data_in;
+LINE1_INPUT <= pixel_in_data;
 
 INPUT_LINES(15 downto 8) <= LINE0_INPUT ;
 INPUT_LINES(7 downto 0) <=  LINE1_INPUT ; 
  
 
-enable_line0_latches <= (NOT hsync) when nb_line > 0 else
+enable_line0_latches <= (NOTpixel_in_hsync) when nb_line > 0 else
 								'0' ;
-enable_line1_latches <= (NOT hsync) when nb_line > 1 else
+enable_line1_latches <= (NOTpixel_in_hsync) when nb_line > 1 else
 								'0' ;
 
 
@@ -126,10 +126,10 @@ gen_latches_row : for I in 0 to 2 generate
 			latch_i_i: generic_latch
 						  generic map(NBIT => 9)
 						  port map(
-							clk => pixel_clock ,
+							clk => pixel_in_clk ,
 							resetn => resetn ,
-							sraz => vsync ,
-							en => NOT hsync,
+							sraz =>pixel_in_vsync ,
+							en => NOTpixel_in_hsync,
 							d => std_block3x3(I,J+1), 
 							q => std_block3x3(I,J)
 						  );
@@ -147,11 +147,11 @@ gen_latches_row : for I in 0 to 2 generate
 			latch_i_i: generic_latch
 						  generic map(NBIT => 9)
 						  port map(
-							clk => pixel_clock ,
+							clk => pixel_in_clk ,
 							resetn =>resetn ,
-							sraz => vsync,
-							en => NOT hsync,
-							d => ( '0' & pixel_data_in), 
+							sraz =>pixel_in_vsync,
+							en => NOTpixel_in_hsync,
+							d => ( '0' & pixel_in_data), 
 							q => std_block3x3(2,2)
 						  );
 		end generate right_col_2;
@@ -162,10 +162,10 @@ end generate gen_latches_row;
 pixel_counter0: simple_counter
 		generic map(NBIT => nbit(WIDTH))
 		port map(
-			clk => pixel_clock,
+			clk => pixel_in_clk,
 			resetn => resetn, 
-			sraz => hsync ,
-			en => NOT hsync , 
+			sraz =>pixel_in_hsync ,
+			en => NOTpixel_in_hsync , 
 			load => '0',
 			E => (others => '0'), 
 			Q => pixel_counterq
@@ -174,24 +174,24 @@ pixel_counter0: simple_counter
 delay_sync_signals: generic_latch
 			  generic map(NBIT => 2)
 			  port map(
-				clk => (pixel_clock) ,
+				clk => (pixel_in_clk) ,
 				resetn =>resetn ,
 				sraz => '0' ,
 				en => '1',
-				d => hsync & vsync, 
-				q(1) => hsync_delayed, 
-				q(0) => vsync_out
+				d =>pixel_in_hsync &pixel_in_vsync, 
+				q(1) =>pixel_in_hsync_delayed, 
+				q(0) => pixel_out_vsync
 			  );
-hsync_out <= hsync_delayed ;
-pixel_clock_out <= pixel_clock ;
+pixel_out_hsync <=pixel_in_hsync_delayed ;
+pixel_out_clk <= pixel_in_clk ;
 	
 line_counter0: simple_counter
 		generic map(NBIT => nbit(HEIGHT))
 		port map(
-			clk => hsync,
+			clk =>pixel_in_hsync,
 			resetn => resetn, 
-			sraz => vsync ,
-			en => NOT vsync , 
+			sraz =>pixel_in_vsync ,
+			en => NOTpixel_in_vsync , 
 			load => '0',
 			E => (others => '0'), 
 			Q => nb_line

@@ -17,8 +17,8 @@ entity rgb565_camera_interface is
  		b_data : out std_logic_vector(7 downto 0 ); 
  		scl : inout std_logic; 
  		sda : inout std_logic; 
- 		pixel_clock_out, hsync_out, vsync_out : out std_logic; 
- 		pxclk, href, vsync : in std_logic
+ 		pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic; 
+ 		pxclk, href,pixel_in_vsync : in std_logic
 	); 
 end rgb565_camera_interface;
 
@@ -41,7 +41,7 @@ architecture systemc of rgb565_camera_interface is
 	
 	signal pxclk_old, pxclk_rising_edge, pxclk_falling_edge, nclk : std_logic ;
 	signal en_rlatch, en_glatch0, en_glatch1, en_blatch : std_logic ;
-	signal hsynct, vsynct, pxclkt, pixel_clock_out_t  : std_logic ;
+	signalpixel_in_hsynct,pixel_in_vsynct, pxclkt, pixel_out_clk_t  : std_logic ;
 	for register_rom_vga : rgb565_register_rom use entity rgb565_register_rom(vga) ;
 	for register_rom_qvga : rgb565_register_rom use entity rgb565_register_rom(qvga) ;
 	
@@ -190,8 +190,8 @@ b_data(2 downto 0) <= (others => '0');
 				vsynct <= '0' ;
 				pxclkt <= '0' ;
 		 	elsif  clock'event and clock = '1'  then
-				hsynct <= NOT href ; -- changing href into hsync
-				vsynct <= vsync ;
+				hsynct <= NOT href ; -- changing href intopixel_in_hsync
+				vsynct <=pixel_in_vsync ;
 				pxclkt <= pxclk ;
 			end if ;
 	end process ;
@@ -205,7 +205,7 @@ b_data(2 downto 0) <= (others => '0');
 				pxclk_old <= '0' ;
 		 	elsif  clock'event and clock = '1' then
 				pxclk_old <= pxclk ;
-				if pxclk /= pxclk_old and hsynct = '0' and vsynct = '0' then
+				if pxclk /= pxclk_old andpixel_in_hsynct = '0' andpixel_in_vsynct = '0' then
 					pxclk_rising_edge <= pxclk ;
 					pxclk_falling_edge <= NOT pxclk ;
 				else
@@ -225,22 +225,22 @@ b_data(2 downto 0) <= (others => '0');
 	end process ;
 
 
-	process(hsynct, vsynct, pix_state, pxclk_rising_edge)
+	process(hsynct,pixel_in_vsynct, pix_state, pxclk_rising_edge)
 		begin
 			next_state <= pix_state ;
 			case pix_state is
 				when WAIT_LINE =>
-					if hsynct = '0' and vsynct = '0' then
+					ifpixel_in_hsynct = '0' andpixel_in_vsynct = '0' then
 						next_state <= RG ;
 					end if ;
 				when RG => 
-					if hsynct = '1' or vsynct = '1' then
+					ifpixel_in_hsynct = '1' orpixel_in_vsynct = '1' then
 						next_state <= WAIT_LINE ;
 					elsif pxclk_falling_edge = '1' then
 						next_state <= GB ;
 					end if ;
 				when GB => 
-					if hsynct = '1' or vsynct = '1' then
+					ifpixel_in_hsynct = '1' orpixel_in_vsynct = '1' then
 						next_state <= WAIT_LINE ;
 					elsif pxclk_falling_edge = '1' then
 						next_state <= RG ;
@@ -251,7 +251,7 @@ b_data(2 downto 0) <= (others => '0');
 	 end process;  
 	 
 	 with pix_state select
-		pixel_clock_out_t <=  pxclkt when  GB , 
+		pixel_out_clk_t <=  pxclkt when  GB , 
 									 '0' when others ;
 								  
 	 with pix_state select
@@ -268,9 +268,9 @@ b_data(2 downto 0) <= (others => '0');
 		en_blatch <=  pxclk when  GB ,
 						  '0' when others ;
 	
-    hsync_out <= hsynct AND (NOT pixel_clock_out_t) ;	
-	 vsync_out <= vsynct AND (NOT pixel_clock_out_t);
-	 pixel_clock_out <= pixel_clock_out_t ;
+    pixel_out_hsync <=pixel_in_hsynct AND (NOT pixel_out_clk_t) ;	
+	 pixel_out_vsync <=pixel_in_vsynct AND (NOT pixel_out_clk_t);
+	 pixel_out_clk <= pixel_out_clk_t ;
 
 	
 end systemc ;

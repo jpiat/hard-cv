@@ -50,15 +50,15 @@ ARCHITECTURE behavior OF down_scaler_tb IS
    --Inputs
    signal clk : std_logic := '0';
    signal resetn : std_logic := '0';
-   signal pixel_clock : std_logic := '0';
-   signal hsync : std_logic := '0';
-   signal vsync : std_logic := '0';
-   signal pixel_data_in : std_logic_vector(7 downto 0) := (others => '0');
+   signal pixel_in_clk : std_logic := '0';
+   signalpixel_in_hsync : std_logic := '0';
+   signalpixel_in_vsync : std_logic := '0';
+   signal pixel_in_data : std_logic_vector(7 downto 0) := (others => '0');
 
  	--Outputs
-   signal pixel_clock_out : std_logic;
-   signal hsync_out : std_logic;
-   signal vsync_out : std_logic;
+   signal pixel_out_clk : std_logic;
+   signal pixel_out_hsync : std_logic;
+   signal pixel_out_vsync : std_logic;
    signal pixel_out : std_logic_vector(7 downto 0);
 
 
@@ -75,8 +75,8 @@ BEGIN
 		port map(
 				clk => clk, 
 				resetn => resetn,
-				pixel_data =>  pixel_data_in,
-				pixel_clock_out => pixel_clock, hsync_out => hsync, vsync_out => vsync );
+				pixel_data =>  pixel_in_data,
+				pixel_out_clk => pixel_in_clk, pixel_out_hsync =>pixel_in_hsync, pixel_out_vsync =>pixel_in_vsync );
  
  
  
@@ -85,10 +85,10 @@ BEGIN
 			port map(
 				clk => clk ,
 				resetn => resetn,
-				pixel_clock => pixel_clock, hsync => hsync, vsync => vsync,
-				pixel_clock_out => pixel_clock_out, hsync_out => hsync_out, vsync_out=> vsync_out,
-				pixel_data_in => pixel_data_in, 
-				pixel_data_out => pixel_out
+				pixel_in_clk => pixel_in_clk,pixel_in_hsync =>pixel_in_hsync,pixel_in_vsync =>pixel_in_vsync,
+				pixel_out_clk => pixel_out_clk, pixel_out_hsync => pixel_out_hsync, pixel_out_vsync=> pixel_out_vsync,
+				pixel_in_data => pixel_in_data, 
+				pixel_out_data => pixel_out
 			);
 		  
 		  
@@ -97,7 +97,7 @@ BEGIN
 		port map(
 		clk => clk,
 		resetn=> resetn , 
-		pixel_clock => pixel_clock_out, hsync => hsync_out, vsync => vsync_out, 
+		pixel_in_clk => pixel_out_clk,pixel_in_hsync => pixel_out_hsync,pixel_in_vsync => pixel_out_vsync, 
 		value_in => (x"00"&pixel_out)
 		);
 

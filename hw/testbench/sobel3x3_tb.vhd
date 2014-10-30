@@ -19,9 +19,9 @@
 				HEIGHT: natural := 480);
 				port(
 					resetn : in std_logic; 
-					pixel_clock, hsync, vsync : in std_logic;
-					pixel_clock_out, hsync_out, vsync_out : out std_logic;
-					pixel_data_in : in std_logic_vector(7 downto 0 ); 
+					pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic;
+					pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic;
+					pixel_in_data : in std_logic_vector(7 downto 0 ); 
 					block_out : out mat3);
 			end component;
 
@@ -29,8 +29,8 @@
 			constant pclk_period : time := 40 ns ;
 			
 			signal clk, resetn : std_logic ;
-			signal pxclk, hsync, vsync : std_logic ;
-			signal pxclk_out, hsync_out, vsync_out : std_logic ;
+			signal pxclk,pixel_in_hsync,pixel_in_vsync : std_logic ;
+			signal pxclk_out, pixel_out_hsync, pixel_out_vsync : std_logic ;
 			signal pixel : std_logic_vector(7 downto 0 ) := (others => '0');
 			signal abs_val : std_logic_vector(7 downto 0 );
 			signal raw_val : signed(15 downto 0 ) ;	
@@ -42,14 +42,14 @@
 				port map(
 						clk => clk, 
 						resetn => resetn, 
-						pixel_clock => pxclk, 
-						hsync => hsync, 
-						vsync => vsync,
-						pixel_clock_out => pxclk_out, 
-						hsync_out => hsync_out, 
-						vsync_out => vsync_out,
-						pixel_data_in => pixel, 
-						pixel_data_out => abs_val
+						pixel_in_clk => pxclk, 
+						hsync =>pixel_in_hsync, 
+						vsync =>pixel_in_vsync,
+						pixel_out_clk => pxclk_out, 
+						pixel_out_hsync => pixel_out_hsync, 
+						pixel_out_vsync => pixel_out_vsync,
+						pixel_in_data => pixel, 
+						pixel_out_data => abs_val
 				);
 
 	process

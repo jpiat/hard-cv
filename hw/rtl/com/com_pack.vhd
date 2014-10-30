@@ -16,8 +16,8 @@ component send_picture is
 	port(
  		clk : in std_logic; 
  		resetn : in std_logic; 
- 		pixel_clock, hsync, vsync : in std_logic; 
- 		pixel_data_in : in std_logic_vector(7 downto 0 ); 
+ 		pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+ 		pixel_in_data : in std_logic_vector(7 downto 0 ); 
  		data_out : out std_logic_vector(7 downto 0 ); 
 		output_ready : in std_logic;
  		send : out std_logic

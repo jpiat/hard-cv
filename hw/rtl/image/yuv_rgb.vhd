@@ -37,8 +37,8 @@ use work.utils_pack.all ;
 entity yuv_rgb is
 port( clk	:	in std_logic ;
 		resetn	:	in std_logic ;
-		pixel_clock, hsync, vsync : in std_logic; 
-		pixel_clock_out, hsync_out, vsync_out : out std_logic; 
+		pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+		pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic; 
  		pixel_y : in std_logic_vector(7 downto 0) ;
 		pixel_u : in std_logic_vector(7 downto 0) ;
 		pixel_v : in std_logic_vector(7 downto 0) ;
@@ -99,7 +99,7 @@ pixel_r_latch0 : edge_triggered_latch
 		 port map( clk =>clk,
 				  resetn => resetn ,
 				  sraz => '0' ,
-				  en => pixel_clock ,
+				  en => pixel_in_clk ,
 				  d => clamp_pixel_r_t(7 downto 0) , 
 				  q => pixel_r);
 				  
@@ -108,7 +108,7 @@ pixel_g_latch0 : edge_triggered_latch
 		 port map( clk =>clk,
 				  resetn => resetn ,
 				  sraz => '0' ,
-				  en => pixel_clock ,
+				  en => pixel_in_clk ,
 				  d => clamp_pixel_g_t(7 downto 0) , 
 				  q => pixel_g);
 
@@ -117,20 +117,20 @@ pixel_b_latch0 : edge_triggered_latch
 		 port map( clk =>clk,
 				  resetn => resetn ,
 				  sraz => '0' ,
-				  en => pixel_clock ,
+				  en => pixel_in_clk ,
 				  d => clamp_pixel_b_t(7 downto 0) , 
 				  q => pixel_b);				  
 
 process(clk, resetn)
 begin
 	if resetn = '0' then
-		pixel_clock_out <= '0';
-		hsync_out <= '0' ;
-		vsync_out <= '0' ;
+		pixel_out_clk <= '0';
+		pixel_out_hsync <= '0' ;
+		pixel_out_vsync <= '0' ;
 	elsif clk'event and clk = '1' then
-		pixel_clock_out <= pixel_clock;
-		hsync_out <= hsync ;
-		vsync_out <= vsync ;
+		pixel_out_clk <= pixel_in_clk;
+		pixel_out_hsync <=pixel_in_hsync ;
+		pixel_out_vsync <=pixel_in_vsync ;
 	end if ;
 end process ;
 

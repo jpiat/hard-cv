@@ -43,8 +43,8 @@ entity blockNxN is
 		port(
 			clk : in std_logic; 
 			resetn : in std_logic; 
-			pixel_clock, hsync, vsync : in std_logic; 
-			pixel_data_in : in std_logic_vector(7 downto 0 ); 
+			pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+			pixel_in_data : in std_logic_vector(7 downto 0 ); 
 			new_block : out std_logic ;
 			block_out : out matNM(0 to N-1, 0 to N-1));
 end blockNxN;
@@ -73,7 +73,7 @@ signal enable_lines_latches : std_logic ;
 signal nb_line : std_logic_vector((nbit(HEIGHT) - 1) downto 0) := (others => '0');
 signal pixel_counterq, pixel_counterq_delayed : std_logic_vector((nbit(WIDTH) - 1) downto 0) := (others => '0');
 
-signal old_pixel_clock, pixel_clock_rising_edge, new_blockq : std_logic ;
+signal old_pixel_in_clk, pixel_in_clk_rising_edge, new_blockq : std_logic ;
 
 begin
 
@@ -100,9 +100,9 @@ gen_mem_input_0 : for I in 0 to (N - 2) generate
 end generate gen_mem_input_0;	
 
  
-lpixel_data <= ( '0' & pixel_data_in) ;
+lpixel_data <= ( '0' & pixel_in_data) ;
 
-enable_lines_latches <= (NOT hsync and pixel_clock) ;
+enable_lines_latches <= (NOTpixel_in_hsync and pixel_in_clk) ;
 
 
 gen_line_latches : for I in 0 to (N - 1) generate
@@ -114,13 +114,13 @@ end generate gen_line_latches;
 process(clk, resetn)
 begin
 	if resetn = '0' then
-		old_pixel_clock <= '0' ;
+		old_pixel_in_clk <= '0' ;
 	elsif clk'event and clk = '1' then
-		old_pixel_clock <= pixel_clock ;
+		old_pixel_in_clk <= pixel_in_clk ;
 	end if ;
 end process ;
-pixel_clock_rising_edge <= ((NOT old_pixel_clock) AND pixel_clock) ;
-new_blockq <= pixel_clock_rising_edge when hsync = '0' else
+pixel_in_clk_rising_edge <= ((NOT old_pixel_in_clk) AND pixel_in_clk) ;
+new_blockq <= pixel_in_clk_rising_edge whenpixel_in_hsync = '0' else
 				 '0' ;
 new_block <= new_blockq ;
 
@@ -141,7 +141,7 @@ gen_latches_row : for I in 0 to (N-1) generate
 						  port map(
 							clk => clk ,
 							resetn => resetn ,
-							sraz => vsync ,
+							sraz =>pixel_in_vsync ,
 							en => enable_lines_latches,
 							d => std_blockNxN(I, J+1), 
 							q => std_blockNxN(I, J)
@@ -153,7 +153,7 @@ gen_latches_row : for I in 0 to (N-1) generate
 						  port map(
 							clk => clk ,
 							resetn => resetn ,
-							sraz => vsync ,
+							sraz =>pixel_in_vsync ,
 							en => enable_lines_latches,
 							d => LINEI_OUTPUT(I), 
 							q => std_blockNxN(I, (N - 1))
@@ -166,7 +166,7 @@ gen_latches_row : for I in 0 to (N-1) generate
 						  port map(
 							clk => clk ,
 							resetn =>resetn ,
-							sraz => vsync,
+							sraz =>pixel_in_vsync,
 							en => enable_lines_latches,
 							d => lpixel_data, 
 							q => std_blockNxN(I,I)
@@ -181,7 +181,7 @@ pixel_counter0: pixel_counter
 		port map(
 			clk => clk,
 			resetn => resetn, 
-			pixel_clock => pixel_clock, hsync => hsync,
+			pixel_in_clk => pixel_in_clk,pixel_in_hsync =>pixel_in_hsync,
 			pixel_count => pixel_counterq
 			);
 			
@@ -190,7 +190,7 @@ delay_counter: edge_triggered_latch
 		port map(
 			clk => clk ,
 			resetn =>resetn ,
-			sraz => hsync,
+			sraz =>pixel_in_hsync,
 			en => enable_lines_latches,
 			d => pixel_counterq, 
 			q => pixel_counterq_delayed
@@ -201,7 +201,7 @@ line_counter0: line_counter
 		port map(
 			clk => clk,
 			resetn => resetn, 
-			hsync => hsync, vsync => vsync, 
+			hsync =>pixel_in_hsync,pixel_in_vsync =>pixel_in_vsync, 
 			line_count => nb_line
 			);
 			

@@ -34,10 +34,10 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL ;
 entity binarization is
 generic(INVERT : natural := 0; VALUE : std_logic_vector(7 downto 0) := X"FF");
 port( 
- 		pixel_data_in : in std_logic_vector(7 downto 0) ;
+ 		pixel_in_data : in std_logic_vector(7 downto 0) ;
 		upper_bound	:	in std_logic_vector(7 downto 0);
 		lower_bound	:	in std_logic_vector(7 downto 0);
-		pixel_data_out : out std_logic_vector(7 downto 0) 
+		pixel_out_data : out std_logic_vector(7 downto 0) 
 );
 end binarization;
 
@@ -46,14 +46,14 @@ architecture Behavioral of binarization is
 begin
 
 non_inv0 : if INVERT = 0 generate
-pixel_data_out <= X"00" when pixel_data_in >= upper_bound else
-						X"00" when pixel_data_in < lower_bound else
+pixel_out_data <= X"00" when pixel_in_data >= upper_bound else
+						X"00" when pixel_in_data < lower_bound else
 						VALUE ;
 end generate non_inv0;
 
 inv0 : if INVERT = 1 generate						
-pixel_data_out <= VALUE when pixel_data_in >= upper_bound else
-						VALUE when pixel_data_in < lower_bound else
+pixel_out_data <= VALUE when pixel_in_data >= upper_bound else
+						VALUE when pixel_in_data < lower_bound else
 						X"00" ;
 end generate inv0;
 

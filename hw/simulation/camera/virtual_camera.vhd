@@ -39,12 +39,15 @@ use work.pgm.all ;
 --use UNISIM.VComponents.all;
 
 entity virtual_camera is
-generic(IMAGE_PATH : string ; PERIOD : time := 10ns);
+generic(IMAGE_PATH : string := ""; 
+			PERIOD : time := 10ns; 
+			HEIGHT : positive := 240;
+			WIDTH : positive := 320);
 port(
 		clk : in std_logic; 
  		resetn : in std_logic; 
  		pixel_data : out std_logic_vector(7 downto 0 ); 
- 		pixel_clock_out, hsync_out, vsync_out : out std_logic );
+ 		pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic );
 end virtual_camera;
 
 architecture Behavioral of virtual_camera is
@@ -58,27 +61,27 @@ read_file:
 		variable px_count, x_count, y_count, line_count, byte_count : integer := 0 ;
     begin
 		image := pgm_read(IMAGE_PATH);
-      loop EXIT WHEN line_count = 277;
-				pixel_clock_out <= '0';
-				if px_count < 320 and line_count > 25 and line_count < 266 then
-					hsync_out <= '0' ;					
+      loop EXIT WHEN line_count = (HEIGHT+37);
+				pixel_out_clk <= '0';
+				if px_count < WIDTH and line_count > 25 and line_count < (HEIGHT+26) then
+					pixel_out_hsync <= '0' ;					
 					pixel_data <= std_logic_vector(to_unsigned(image.all(px_count,line_count - 26), 8)) ;
 				else
-						hsync_out <= '1' ;
+						pixel_out_hsync <= '1' ;
 				end if ;
 				
 
 				if line_count < 3 then
-					vsync_out <= '1' ;
+					pixel_out_vsync <= '1' ;
 				 else 
-					vsync_out <= '0' ;
+					pixel_out_vsync <= '0' ;
 				end if ;
 				wait for PERIOD/2;
 				
-				pixel_clock_out <= '1';
-				if (px_count = 575 ) then
+				pixel_out_clk <= '1';
+				if (px_count = (WIDTH+155) ) then
 					px_count := 0 ;
-					if (line_count > 277) then
+					if (line_count > (HEIGHT+37)) then
 						line_count := 0;
 				  else
 					 line_count := line_count + 1 ;
@@ -87,7 +90,7 @@ read_file:
 				  px_count := px_count + 1 ;
 				end if ;
 				wait for PERIOD/2;
-				if line_count >= 266 then
+				if line_count >= (HEIGHT+26) then
 					line_count := 0;
 					px_count := 0;
 				end if;

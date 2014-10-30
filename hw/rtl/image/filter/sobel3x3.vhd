@@ -43,12 +43,12 @@ generic(WIDTH: natural := 640;
 port(
  		clk : in std_logic; 
  		resetn : in std_logic; 
- 		pixel_clock, hsync, vsync : in std_logic; 
- 		pixel_clock_out, hsync_out, vsync_out : out std_logic; 
- 		pixel_data_in : in std_logic_vector(7 downto 0 ); 
- 		pixel_data_out : out std_logic_vector(7 downto 0 );
-		x_grad	:	out signed(7 downto 0);
-		y_grad	:	out signed(7 downto 0)
+ 		pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+ 		pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic; 
+ 		pixel_in_data : in std_logic_vector(7 downto 0 ); 
+ 		pixel_out_data : out std_logic_vector(7 downto 0 );
+		x_grad	:	out signed(15 downto 0);
+		y_grad	:	out signed(15 downto 0)
 );
 end sobel3x3;
 
@@ -56,15 +56,15 @@ end sobel3x3;
 
 architecture Arithmetic of sobel3x3 is
 	
-	signal pxclk_from_conv1, hsync_from_conv1, vsync_from_conv1 : std_logic ;
-	signal pxclk_from_conv2, hsync_from_conv2, vsync_from_conv2 : std_logic ;
+	signal pxclk_from_conv1,pixel_in_hsync_from_conv1,pixel_in_vsync_from_conv1 : std_logic ;
+	signal pxclk_from_conv2,pixel_in_hsync_from_conv2,pixel_in_vsync_from_conv2 : std_logic ;
 	signal new_conv1, new_conv2, new_conv : std_logic;
 	signal busy1, busy2, busy : std_logic;
 	signal pixel_from_conv1, pixel_from_conv2, pixel_from_conv : std_logic_vector(7 downto 0);
 	signal raw_from_conv1, raw_from_conv2, raw_from_conv1_latched, raw_from_conv2_latched, sobel_response : signed(15 downto 0);
 	signal block3x3_sig : matNM(0 to 2, 0 to 2) ;
 	signal new_block, pxclk_state : std_logic ;
-	signal pixel_clock_old, hsync_old, new_conv_old, pixel_clock_en : std_logic ;
+	signal pixel_in_clk_old,pixel_in_hsync_old, new_conv_old, pixel_in_clk_en : std_logic ;
 --	for block0 : block3X3 use entity block3X3(RTL) ;
 --	for conv3x3_0 : conv3x3 use entity conv3x3(RTL) ;
 --	for conv3x3_1 : conv3x3 use entity conv3x3(RTL) ;
@@ -75,8 +75,8 @@ begin
 		port map(
 			clk => clk ,
 			resetn => resetn , 
-			pixel_clock => pixel_clock , hsync => hsync , vsync => vsync,
-			pixel_data_in => pixel_data_in ,
+			pixel_in_clk => pixel_in_clk ,pixel_in_hsync =>pixel_in_hsync ,pixel_in_vsync =>pixel_in_vsync,
+			pixel_in_data => pixel_in_data ,
 			new_block => new_block,
 			block_out => block3x3_sig);
 		
@@ -113,26 +113,26 @@ begin
 				raw_res => raw_from_conv2
 		);
 		
-		pixel_clock_en <= pixel_clock and (not hsync) ;
+		pixel_in_clk_en <= pixel_in_clk and (not pixel_in_hsync) ;
 		delay_sync: generic_delay
 		generic map( WIDTH =>  3 , DELAY => 5)
 		port map(
 			clk => clk, resetn => resetn ,
-			input(0) => hsync ,
-			input(1) => vsync ,
-			input(2) => pixel_clock_en ,
-			output(0) => hsync_out ,
-			output(1) => vsync_out,
-			output(2) => pixel_clock_out
+			input(0) =>pixel_in_hsync ,
+			input(1) =>pixel_in_vsync ,
+			input(2) => pixel_in_clk_en ,
+			output(0) => pixel_out_hsync ,
+			output(1) => pixel_out_vsync,
+			output(2) => pixel_out_clk
 		);		
 	
-		-- todo convolution takes 4 cycles, block takes one, hsync, vsync signals should be delayed by 5 cycles
+		-- todo convolution takes 4 cycles, block takes one,pixel_in_hsync,pixel_in_vsync signals should be delayed by 5 cycles
 --		process(clk, resetn)
 --		begin
 --			if resetn = '0' then
---				pixel_clock_out <= '0' ;
+--				pixel_out_clk <= '0' ;
 --			elsif clk'event and clk = '1' and busy = '0' then
---				pixel_clock_out <= new_conv ;
+--				pixel_out_clk <= new_conv ;
 --			end if ;
 --		end process ;
 	
@@ -149,8 +149,8 @@ begin
 		end process ;
 		
 		sobel_response <= abs(raw_from_conv1_latched) + abs(raw_from_conv2_latched) ;
-		--pixel_data_out <= pixel_from_conv1 + pixel_from_conv2 ;
-		pixel_data_out <= std_logic_vector(sobel_response(10 downto 3));
+		--pixel_out_data <= pixel_from_conv1 + pixel_from_conv2 ;
+		pixel_out_data <= std_logic_vector(sobel_response(10 downto 3));
 		x_grad <= raw_from_conv1_latched(10 downto 3) ;
 		y_grad <= raw_from_conv2_latched(10 downto 3) ;
 		new_conv <= (new_conv1 AND new_conv2) ;
@@ -169,7 +169,7 @@ architecture RTL of sobel3x3 is
 	signal busy1, busy2, busy : std_logic;
 	signal sobel_response : signed(15 downto 0);
 	signal block3x3_sig : matNM(0 to 2, 0 to 2) ;
-	signal pixel_clock_old, hsync_old, new_conv_old, pixel_clock_en, new_block : std_logic ;
+	signal pixel_in_clk_old,pixel_in_hsync_old, new_conv_old, pixel_in_clk_en, new_block : std_logic ;
 	signal raw_from_conv1_latched, raw_from_conv2_latched : signed(15 downto 0);
 begin
 
@@ -178,8 +178,8 @@ begin
 		port map(
 			clk => clk ,
 			resetn => resetn , 
-			pixel_clock => pixel_clock , hsync => hsync , vsync => vsync,
-			pixel_data_in => pixel_data_in ,
+			pixel_in_clk => pixel_in_clk ,pixel_in_hsync =>pixel_in_hsync ,pixel_in_vsync =>pixel_in_vsync,
+			pixel_in_data => pixel_in_data ,
 			new_block => new_block,
 			block_out => block3x3_sig);
 		
@@ -227,17 +227,17 @@ begin
 			end if ;
 		end process;
 		
-		pixel_clock_en <= pixel_clock ; --and (not hsync) ;
+		pixel_in_clk_en <= pixel_in_clk ; --and (notpixel_in_hsync) ;
 		delay_sync: generic_delay
 		generic map( WIDTH =>  3 , DELAY => 5)
 		port map(
 			clk => clk, resetn => resetn ,
-			input(0) => hsync ,
-			input(1) => vsync ,
-			input(2) => pixel_clock_en ,
-			output(0) => hsync_out ,
-			output(1) => vsync_out,
-			output(2) => pixel_clock_out
+			input(0) =>pixel_in_hsync ,
+			input(1) =>pixel_in_vsync ,
+			input(2) => pixel_in_clk_en ,
+			output(0) => pixel_out_hsync ,
+			output(1) => pixel_out_vsync,
+			output(2) => pixel_out_clk
 		);		
 
 	process(clk, resetn)
@@ -252,9 +252,9 @@ begin
 		end process ;
 		
 		sobel_response <= abs(raw_from_conv1_latched) + abs(raw_from_conv2_latched) ;
-		pixel_data_out <= std_logic_vector(sobel_response(10 downto 3));
-		x_grad <= raw_from_conv1_latched(10 downto 3) ;
-		y_grad <= raw_from_conv2_latched(10 downto 3) ;
+		pixel_out_data <= std_logic_vector(sobel_response(10 downto 3));
+		x_grad <= raw_from_conv1_latched ;
+		y_grad <= raw_from_conv2_latched ;
 		
 		
 end RTL;

@@ -44,9 +44,9 @@ generic(WIDTH: natural := 640;
 		port(
 			clk : in std_logic; 
 			resetn : in std_logic; 
-			pixel_clock, hsync, vsync : in std_logic; 
-			pixel_data_in : in std_logic_vector(7 downto 0 ); 
-			pixel_clock_out, hsync_out, vsync_out : out std_logic; 
+			pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+			pixel_in_data : in std_logic_vector(7 downto 0 ); 
+			pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic; 
 			descriptor :  out std_logic_vector((DESCRIPTOR_LENGTH - 1) downto 0) );
 end BRIEF;
 
@@ -66,8 +66,8 @@ window_mgt : blockNxN
 		port map(
 			clk => clk ,
 			resetn => resetn , 
-			pixel_clock => pixel_clock, hsync => hsync, vsync => vsync , 
-			pixel_data_in =>  pixel_data_in, 
+			pixel_in_clk => pixel_in_clk,pixel_in_hsync =>pixel_in_hsync,pixel_in_vsync =>pixel_in_vsync , 
+			pixel_in_data =>  pixel_in_data, 
 			new_block => new_block ,
 			block_out => window);
 
@@ -80,13 +80,13 @@ delay_sync: generic_delay
 		generic map( WIDTH =>  2 , DELAY => 1)
 		port map(
 			clk => clk, resetn => resetn ,
-			input(0) => hsync ,
-			input(1) => vsync ,
-			output(0) => hsync_out ,
-			output(1) => vsync_out
+			input(0) =>pixel_in_hsync ,
+			input(1) =>pixel_in_vsync ,
+			output(0) => pixel_out_hsync ,
+			output(1) => pixel_out_vsync
 		);
 
-pixel_clock_out <= new_block ;
+pixel_out_clk <= new_block ;
 
 end Behavioral;
 

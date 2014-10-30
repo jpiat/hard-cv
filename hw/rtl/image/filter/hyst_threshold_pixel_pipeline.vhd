@@ -40,27 +40,27 @@ generic(WIDTH: natural := 640;
 		  HEIGHT: natural := 480; LOW_THRESH: positive := 100 ; HIGH_THRESH: positive := 180);
 port(
  		resetn : in std_logic; 
- 		pixel_clock, hsync, vsync : in std_logic; 
- 		pixel_clock_out, hsync_out, vsync_out : out std_logic; 
- 		pixel_data_in : in std_logic_vector(7 downto 0 ); 
- 		pixel_data_out : out std_logic_vector(7 downto 0 )
+ 		pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+ 		pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic; 
+ 		pixel_in_data : in std_logic_vector(7 downto 0 ); 
+ 		pixel_out_data : out std_logic_vector(7 downto 0 )
 );
 end hyst_threshold_pixel_pipeline;
 
 architecture RTL of hyst_threshold_pixel_pipeline is
 	signal block3x3_sig : matNM(0 to 2, 0 to 2) ;
-	signal pixel_clock_en, new_block : std_logic ;
+	signal pixel_in_clk_en, new_block : std_logic ;
 begin
 
 		block0:  block3X3_pixel_pipeline
 		generic map(WIDTH =>  WIDTH, HEIGHT => HEIGHT)
 		port map(
 			resetn => resetn , 
-			pixel_clock => pixel_clock , hsync => hsync , vsync => vsync,
-			pixel_data_in => pixel_data_in ,
+			pixel_in_clk => pixel_in_clk ,pixel_in_hsync =>pixel_in_hsync ,pixel_in_vsync =>pixel_in_vsync,
+			pixel_in_data => pixel_in_data ,
 			block_out => block3x3_sig);
 		
-		pixel_data_out <= X"FF" when block3x3_sig(1,1) > HIGH_THRESH else
+		pixel_out_data <= X"FF" when block3x3_sig(1,1) > HIGH_THRESH else
 								X"FF" when block3x3_sig(1,1) > LOW_THRESH and block3x3_sig(0,0) > HIGH_THRESH else
 								X"FF" when block3x3_sig(1,1) > LOW_THRESH and block3x3_sig(0,1) > HIGH_THRESH else			
 								X"FF" when block3x3_sig(1,1) > LOW_THRESH and block3x3_sig(0,2) > HIGH_THRESH else
@@ -73,15 +73,15 @@ begin
 								
 								
 								
-		pixel_clock_out <= pixel_clock ;
+		pixel_out_clk <= pixel_in_clk ;
 		delay_sync: generic_delay
 		generic map( WIDTH => 2 , DELAY => 1)
 		port map(
-			clk => pixel_clock, resetn => resetn ,
-			input(0) => hsync ,
-			input(1) => vsync ,
-			output(0) => hsync_out ,
-			output(1) => vsync_out
+			clk => pixel_in_clk, resetn => resetn ,
+			input(0) =>pixel_in_hsync ,
+			input(1) =>pixel_in_vsync ,
+			output(0) => pixel_out_hsync ,
+			output(1) => pixel_out_vsync
 		);		
 		
 end RTL;

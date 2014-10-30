@@ -44,8 +44,8 @@ generic(WIDTH: natural := 640;
 port(
  		clk : in std_logic; 
  		resetn : in std_logic; 
- 		pixel_clock, hsync, vsync : in std_logic; 
- 		pixel_data_in : in std_logic_vector(7 downto 0 );
+ 		pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+ 		pixel_in_data : in std_logic_vector(7 downto 0 );
 -- active search interface
 -- each lmk to track should be registered as
 --------16bit----------
@@ -111,11 +111,11 @@ architecture Behavioral of BRIEF_MANAGER is
 	signal array_of_correl_done : std_logic_vector(0 to (NB_LMK-1));
 	signal array_of_correl_busy : std_logic_vector(0 to (NB_LMK-1));
 	
-	signal pixel_clock_delayed, hsync_delayed, vsync_delayed :  std_logic; 
+	signal pixel_in_clk_delayed,pixel_in_hsync_delayed,pixel_in_vsync_delayed :  std_logic; 
  	signal pixel_data_delayed :  std_logic_vector(7 downto 0 );
 	
-	signal vsync_falling_edge, vsync_rising_edge, vsync_old : std_logic ;
-	signal hsync_falling_edge, hsync_rising_edge, hsync_old : std_logic ;
+	signalpixel_in_vsync_falling_edge,pixel_in_vsync_rising_edge,pixel_in_vsync_old : std_logic ;
+	signalpixel_in_hsync_falling_edge,pixel_in_hsync_rising_edge,pixel_in_hsync_old : std_logic ;
 
 	signal line_count : std_logic_vector((nbit(HEIGHT) - 1) downto 0 ) ;
 	signal pixel_count : std_logic_vector((nbit(WIDTH) - 1) downto 0 ) ;
@@ -138,13 +138,13 @@ delayed_pixels : generic_delay
 	generic map( WIDTH => 11 , DELAY => DELAY)
 	port map(
 		clk => clk, resetn => resetn,
-		input(0)	=> pixel_clock,
-		input(1) => hsync,
-		input(2) => vsync,
-		input(10 downto 3) => pixel_data_in ,	
-		output(0)	=> pixel_clock_delayed,
-		output(1) => hsync_delayed,
-		output(2) => vsync_delayed,
+		input(0)	=> pixel_in_clk,
+		input(1) =>pixel_in_hsync,
+		input(2) =>pixel_in_vsync,
+		input(10 downto 3) => pixel_in_data ,	
+		output(0)	=> pixel_in_clk_delayed,
+		output(1) =>pixel_in_hsync_delayed,
+		output(2) =>pixel_in_vsync_delayed,
 		output(10 downto 3) => pixel_data_delayed 		 
 	);		
 
@@ -157,9 +157,9 @@ brief_0 : BRIEF
 		port map(
 			clk => clk,
 			resetn => resetn ,
-			pixel_clock => pixel_clock_delayed, hsync => hsync_delayed, vsync => vsync_delayed, 
-			pixel_data_in => pixel_data_delayed ,
-			pixel_clock_out => new_descriptor_t,
+			pixel_in_clk => pixel_in_clk_delayed,pixel_in_hsync =>pixel_in_hsync_delayed,pixel_in_vsync =>pixel_in_vsync_delayed, 
+			pixel_in_data => pixel_data_delayed ,
+			pixel_out_clk => new_descriptor_t,
 			descriptor => feature_descriptor);
 	new_descriptor <= new_descriptor_t;
 	count_pixels: pixel_counter
@@ -167,7 +167,7 @@ brief_0 : BRIEF
 		port map(
 			clk => clk,
 			resetn=> resetn, 
-			pixel_clock => new_descriptor_t, hsync => hsync_delayed , 
+			pixel_in_clk => new_descriptor_t,pixel_in_hsync =>pixel_in_hsync_delayed , 
 			pixel_count => pixel_count);
 
 	count_lines: line_counter 
@@ -175,7 +175,7 @@ brief_0 : BRIEF
 		port map(
 			clk => clk,
 			resetn => resetn, 
-			hsync => hsync_delayed, vsync => vsync_delayed, 
+			hsync =>pixel_in_hsync_delayed,pixel_in_vsync =>pixel_in_vsync_delayed, 
 			line_count => line_count);
 
 
@@ -185,14 +185,14 @@ begin
 		vsync_old <= '0' ;
 		hsync_old <= '0' ;
 	elsif clk'event and clk = '1' then
-		vsync_old <= vsync_delayed ;
-		hsync_old <= hsync_delayed ;
+		vsync_old <=pixel_in_vsync_delayed ;
+		hsync_old <=pixel_in_hsync_delayed ;
 	end if ;
 end process ;	
-vsync_falling_edge <= (NOT vsync_delayed) and vsync_old ;
-vsync_rising_edge <= vsync_delayed and (NOT vsync_old) ;
-hsync_falling_edge <= (NOT hsync_delayed) and hsync_old ;
-hsync_rising_edge <= hsync_delayed and (NOT hsync_old) ;
+vsync_falling_edge <= (NOTpixel_in_vsync_delayed) andpixel_in_vsync_old ;
+vsync_rising_edge <=pixel_in_vsync_delayed and (NOTpixel_in_vsync_old) ;
+hsync_falling_edge <= (NOTpixel_in_hsync_delayed) andpixel_in_hsync_old ;
+hsync_rising_edge <=pixel_in_hsync_delayed and (NOTpixel_in_hsync_old) ;
 
 			
 gen_corr : for i in 0 to (NB_LMK-1) generate
@@ -232,7 +232,7 @@ frame_counter : simple_counter
     Port map( clk => clk,
            resetn => resetn,
            sraz=> '0',
-           en => vsync_falling_edge,
+           en =>pixel_in_vsync_falling_edge,
 			  load => '0',
 			  E => (others => '0'),
            Q => frame_count
@@ -289,7 +289,7 @@ begin
   next_load_state <= curr_load_state ;
   case curr_load_state is
 	when WAIT_HSYNC => 
-		if vsync_falling_edge = '1' then
+		ifpixel_in_vsync_falling_edge = '1' then
 			next_load_state <= LOAD_DESC ;
 		end if;
 	when LOAD_DESC => 

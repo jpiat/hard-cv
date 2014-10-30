@@ -34,9 +34,9 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL ;
 entity threshold is
 generic(INVERT : natural := 0; VALUE : std_logic_vector(7 downto 0) := X"FF");
 port( 
- 		pixel_data_in : in std_logic_vector(7 downto 0) ;
+ 		pixel_in_data : in std_logic_vector(7 downto 0) ;
 		threshold	:	in std_logic_vector(7 downto 0);
-		pixel_data_out : out std_logic_vector(7 downto 0) 
+		pixel_out_data : out std_logic_vector(7 downto 0) 
 );
 end threshold;
 
@@ -45,12 +45,12 @@ architecture Behavioral of threshold is
 begin
 
 non_inv0 : if INVERT = 0 generate
-pixel_data_out <= VALUE when pixel_data_in >= threshold else
+pixel_out_data <= VALUE when pixel_in_data >= threshold else
 						X"00" ;
 end generate non_inv0;
 
 inv0 : if INVERT = 1 generate						
-pixel_data_out <= X"00" when pixel_data_in >= threshold else
+pixel_out_data <= X"00" when pixel_in_data >= threshold else
 						VALUE ;
 end generate inv0;
 

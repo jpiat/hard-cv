@@ -41,9 +41,9 @@ entity block3X3_pixel_pipeline_sp is
 		  HEIGHT: natural := 480);
 		port(
 			resetn : in std_logic; 
-			pixel_clock, hsync, vsync : in std_logic;
-			pixel_clock_out, hsync_out, vsync_out : out std_logic;
-			pixel_data_in : in std_logic_vector(7 downto 0 ); 
+			pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic;
+			pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic;
+			pixel_in_data : in std_logic_vector(7 downto 0 ); 
 			block_out : out matNM(0 to 2, 0 to 2));
 end block3X3_pixel_pipeline_sp;
 
@@ -72,7 +72,7 @@ signal enable_line0_latches, enable_line1_latches : std_logic ;
 
 signal nb_line : std_logic_vector((nbit(HEIGHT) - 1) downto 0) := (others => '0');
 signal pixel_counterq, pixel_counterq_m : std_logic_vector((nbit(WIDTH) - 1) downto 0) := (others => '0');
-signal hsync_delayed : std_logic ;
+signalpixel_in_hsync_delayed : std_logic ;
 
 begin
 
@@ -80,8 +80,8 @@ begin
 lines0: dpram_NxN
 	generic map(SIZE => WIDTH + 1 , NBIT => 16, ADDR_WIDTH => nbit(WIDTH))
 	port map(
- 		clk => pixel_clock, 
- 		we => NOT hsync ,
+ 		clk => pixel_in_clk, 
+ 		we => NOTpixel_in_hsync ,
  		spo => OUTPUT_LINES,
  		di => INPUT_LINES,
  		a => LINE_BUFFER_ADDR,
@@ -95,15 +95,15 @@ LINE0_OUTPUT <= OUTPUT_LINES(15 downto 8);
 LINE1_OUTPUT <= OUTPUT_LINES(7 downto 0);
 
 LINE0_INPUT <= OUTPUT_LINES(7 downto 0);
-LINE1_INPUT <= pixel_data_in;
+LINE1_INPUT <= pixel_in_data;
 
 INPUT_LINES(15 downto 8) <= LINE0_INPUT ;
 INPUT_LINES(7 downto 0) <=  LINE1_INPUT ; 
  
 
-enable_line0_latches <= (NOT hsync) when nb_line > 0 else
+enable_line0_latches <= (NOTpixel_in_hsync) when nb_line > 0 else
 								'0' ;
-enable_line1_latches <= (NOT hsync) when nb_line > 1 else
+enable_line1_latches <= (NOTpixel_in_hsync) when nb_line > 1 else
 								'0' ;
 
 
@@ -122,10 +122,10 @@ gen_latches_row : for I in 0 to 2 generate
 			latch_i_i: generic_latch
 						  generic map(NBIT => 9)
 						  port map(
-							clk => pixel_clock ,
+							clk => pixel_in_clk ,
 							resetn => resetn ,
-							sraz => vsync ,
-							en => NOT hsync,
+							sraz =>pixel_in_vsync ,
+							en => NOTpixel_in_hsync,
 							d => std_block3x3(I,J+1), 
 							q => std_block3x3(I,J)
 						  );
@@ -144,10 +144,10 @@ gen_latches_row : for I in 0 to 2 generate
 			latch_i_i: generic_latch
 						  generic map(NBIT => 9)
 						  port map(
-							clk => pixel_clock ,
+							clk => pixel_in_clk ,
 							resetn =>resetn ,
-							sraz => vsync,
-							en => NOT hsync,
+							sraz =>pixel_in_vsync,
+							en => NOTpixel_in_hsync,
 							d => block_latch(2), 
 							q => std_block3x3(2,2)
 						  );
@@ -155,16 +155,16 @@ gen_latches_row : for I in 0 to 2 generate
 	end generate gen_latches_col; 
 end generate gen_latches_row; 
 
- process(pixel_clock, resetn)
+ process(pixel_in_clk, resetn)
 			 begin
 				if resetn = '0' then
 					--block_latch(0) <= (others => '0');
 					block_latch(1) <= (others => '0');
 					block_latch(2) <= (others => '0');
-				elsif pixel_clock'event and pixel_clock = '1' then
+				elsif pixel_in_clk'event and pixel_in_clk = '1' then
 					--block_latch(0) <= ('0' & LINE0_OUTPUT) ;
 					block_latch(1) <= ('0' & LINE1_OUTPUT) ;
-					block_latch(2) <= ('0' & pixel_data_in) ;
+					block_latch(2) <= ('0' & pixel_in_data) ;
 				end if ;
 			 end process ;
 
@@ -175,10 +175,10 @@ end generate gen_latches_row;
 pixel_counter0: simple_counter
 		generic map(NBIT => nbit(WIDTH))
 		port map(
-			clk => pixel_clock,
+			clk => pixel_in_clk,
 			resetn => resetn, 
-			sraz => hsync_delayed ,
-			en => NOT hsync_delayed , 
+			sraz =>pixel_in_hsync_delayed ,
+			en => NOTpixel_in_hsync_delayed , 
 			load => '0',
 			E => (others => '0'), 
 			Q => pixel_counterq
@@ -187,23 +187,23 @@ pixel_counter0: simple_counter
 delay_sync_signals: generic_delay
 			  generic map(WIDTH => 2, DELAY => 2)
 			  port map(
-				clk =>  (not pixel_clock) ,
+				clk =>  (not pixel_in_clk) ,
 				resetn =>resetn ,
-				input(0) => hsync ,
-				input(1) => vsync, 
-				output(0) => hsync_delayed, 
-				output(1) => vsync_out
+				input(0) =>pixel_in_hsync ,
+				input(1) =>pixel_in_vsync, 
+				output(0) =>pixel_in_hsync_delayed, 
+				output(1) => pixel_out_vsync
 			  );
-hsync_out <= hsync_delayed ;
-pixel_clock_out <= pixel_clock ;
+pixel_out_hsync <=pixel_in_hsync_delayed ;
+pixel_out_clk <= pixel_in_clk ;
 	
 line_counter0: simple_counter
 		generic map(NBIT => nbit(HEIGHT))
 		port map(
-			clk => hsync,
+			clk =>pixel_in_hsync,
 			resetn => resetn, 
-			sraz => vsync ,
-			en => NOT vsync , 
+			sraz =>pixel_in_vsync ,
+			en => NOTpixel_in_vsync , 
 			load => '0',
 			E => (others => '0'), 
 			Q => nb_line

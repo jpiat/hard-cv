@@ -43,9 +43,9 @@ generic(WIDTH : positive := 640 ; HEIGHT : positive := 480; WINDOW_SIZE : positi
 port (
 		clk : in std_logic; 
  		resetn : in std_logic; 
- 		pixel_clock, hsync, vsync : in std_logic; 
- 		pixel_clock_out, hsync_out, vsync_out : out std_logic; 
- 		pixel_data_in : in std_logic_vector(7 downto 0 ); 
+ 		pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+ 		pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic; 
+ 		pixel_in_data : in std_logic_vector(7 downto 0 ); 
  		harris_out : out std_logic_vector(15 downto 0 )
 );
 end HARRIS;
@@ -55,8 +55,8 @@ architecture Behavioral of HARRIS is
 	signal pixel_from_sobel : std_logic_vector(7 downto 0);
 	signal pixel_from_gauss : std_logic_vector(7 downto 0);
 	
-	signal pxclk_from_gauss, href_from_gauss, vsync_from_gauss : std_logic ;
-	signal pxclk_from_sobel, href_from_sobel, vsync_from_sobel : std_logic ;
+	signal pxclk_from_gauss, href_from_gauss,pixel_in_vsync_from_gauss : std_logic ;
+	signal pxclk_from_sobel, href_from_sobel,pixel_in_vsync_from_sobel : std_logic ;
 
 
 	signal xgrad, ygrad : signed(7 downto 0);
@@ -80,7 +80,7 @@ architecture Behavioral of HARRIS is
 	signal response_valid : std_logic ;
 
 	
-	signal hsync_delayed, vsync_delayed : std_logic ;
+	signal pixel_in_hsync_delayed,pixel_in_vsync_delayed : std_logic ;
 	signal harris_result : std_logic_vector(15 downto 0);
 	for all : sobel3x3 use entity work.sobel3x3(RTL) ;
 	for all : gauss3x3 use entity work.gauss3x3(RTL) ;
@@ -93,10 +93,10 @@ begin
 		port map(
 					clk => clk ,
 					resetn => resetn ,
-					pixel_clock => pixel_clock, hsync => hsync, vsync =>  vsync,
-					pixel_clock_out => pxclk_from_gauss, hsync_out => href_from_gauss, vsync_out => vsync_from_gauss, 
-					pixel_data_in => pixel_data_in,  
-					pixel_data_out => pixel_from_gauss
+					pixel_in_clk => pixel_in_clk,pixel_in_hsync =>pixel_in_hsync,pixel_in_vsync => pixel_in_vsync,
+					pixel_out_clk => pxclk_from_gauss, pixel_out_hsync => href_from_gauss, pixel_out_vsync =>pixel_in_vsync_from_gauss, 
+					pixel_in_data => pixel_in_data,  
+					pixel_out_data => pixel_from_gauss
 		);		
 		
 	
@@ -107,10 +107,10 @@ begin
 		port map(
 			clk => clk ,
 			resetn => resetn ,
-			pixel_clock => pxclk_from_gauss, hsync => href_from_gauss, vsync =>  vsync_from_gauss,
-			pixel_clock_out => pxclk_from_sobel, hsync_out => href_from_sobel, vsync_out => vsync_from_sobel, 
-			pixel_data_in => pixel_from_gauss,  
-			pixel_data_out => pixel_from_sobel,
+			pixel_in_clk => pxclk_from_gauss,pixel_in_hsync => href_from_gauss,pixel_in_vsync => pixel_in_vsync_from_gauss,
+			pixel_out_clk => pxclk_from_sobel, pixel_out_hsync => href_from_sobel, pixel_out_vsync =>pixel_in_vsync_from_sobel, 
+			pixel_in_data => pixel_from_gauss,  
+			pixel_out_data => pixel_from_sobel,
 			x_grad => xgrad ,
 			y_grad => ygrad
 		);	
@@ -307,19 +307,19 @@ begin
            q => harris_out
 			);
 			
-		vsync_out <= vsync_delayed ;
-		hsync_out <= hsync_delayed ;
-		--pixel_clock_out <= response_valid ;
+		pixel_out_vsync <=pixel_in_vsync_delayed ;
+		pixel_out_hsync <=pixel_in_hsync_delayed ;
+		--pixel_out_clk <= response_valid ;
 		delay_sync: generic_delay
 		generic map( WIDTH =>  3 , DELAY => ((2*(WINDOW_SIZE - 2))+7))
 		port map(
 			clk => clk, resetn => resetn ,
 			input(0) => href_from_sobel ,
-			input(1) => vsync_from_sobel ,
+			input(1) =>pixel_in_vsync_from_sobel ,
 			input(2) => pxclk_from_sobel ,
-			output(0) => hsync_delayed ,
-			output(1) => vsync_delayed ,
-			output(2) => pixel_clock_out
+			output(0) =>pixel_in_hsync_delayed ,
+			output(1) =>pixel_in_vsync_delayed ,
+			output(2) => pixel_out_clk
 		);	
 		
 

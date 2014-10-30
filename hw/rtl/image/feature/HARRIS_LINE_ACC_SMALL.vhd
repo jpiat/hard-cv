@@ -156,7 +156,7 @@ pixel_counter0 : pixel_counter
 		port map(
 			clk => clk,
 			resetn => resetn,
-			pixel_clock => en_pixel_count, hsync => rewind_acc,
+			pixel_in_clk => en_pixel_count,pixel_in_hsync => rewind_acc,
 			pixel_count => pixel_address
 			);
 

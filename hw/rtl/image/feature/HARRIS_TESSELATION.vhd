@@ -44,7 +44,7 @@ entity HARRIS_TESSELATION is
 	port (
 			clk : in std_logic; 
 			resetn : in std_logic; 
-			pixel_clock, hsync, vsync : in std_logic; 
+			pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
 			feature_desc_in : in std_logic_vector(DESCRIPTOR_SIZE-1 downto 0);
 			harris_score_in : in std_logic_vector(15 downto 0 ); 
 			feature_coordx	:	out std_logic_vector(7 downto 0 ) ;
@@ -71,7 +71,7 @@ architecture Behavioral of HARRIS_TESSELATION is
 	signal top_left_cornery : std_logic_vector((nbit(HEIGHT) - 1) downto 0);
 	signal ram_in, ram_out : std_logic_vector((32+ DESCRIPTOR_SIZE)-1 downto 0);
 	signal new_high_score : std_logic ;
-	signal hsync_old, hsync_fe, hsync_re : std_logic ;
+	signalpixel_in_hsync_old,pixel_in_hsync_fe,pixel_in_hsync_re : std_logic ;
 begin
 
 
@@ -82,12 +82,12 @@ begin
 		hsync_old <= '0' ;
 		block_xaddress_old <= (others => '0') ;
 	elsif clk'event and clk = '1' then
-		hsync_old <= hsync ;
+		hsync_old <=pixel_in_hsync ;
 		block_xaddress_old <= block_xaddress ;
 	end if ;
 end process ;
-hsync_fe <= hsync_old and (not hsync) ;
-hsync_re <= (NOT hsync_old) and hsync ;
+hsync_fe <=pixel_in_hsync_old and (notpixel_in_hsync) ;
+hsync_re <= (NOTpixel_in_hsync_old) andpixel_in_hsync ;
 
 
 			 
@@ -142,7 +142,7 @@ pixel_counter0 : pixel_counter
 		port map(
 			clk => clk,
 			resetn => resetn,
-			pixel_clock => pixel_clock, hsync => hsync,
+			pixel_in_clk => pixel_in_clk,pixel_in_hsync =>pixel_in_hsync,
 			pixel_count => pixel_count
 			);
 	
@@ -153,11 +153,11 @@ pixel_counter0 : pixel_counter
 				block_xpos <= (others => '0') ;
 				top_left_cornerx <= (others => '0') ;
 			elsif clk'event and clk = '1' then
-				if hsync = '1' then
+				ifpixel_in_hsync = '1' then
 					block_xaddress <= (others => '0') ;
 					top_left_cornerx <= (others => '0') ;
 					block_xpos <= (others => '0') ;
-				elsif pixel_clock = '1'  then
+				elsif pixel_in_clk = '1'  then
 						if block_xpos = (WIDTH/TILE_NBX - 1) then
 							block_xaddress <= block_xaddress  + 1  ;
 							top_left_cornerx <= pixel_count ;
@@ -175,7 +175,7 @@ pixel_counter0 : pixel_counter
 		port map(
 			clk => clk, 
 			resetn => resetn, 
-			hsync => hsync, vsync => vsync,
+			hsync =>pixel_in_hsync,pixel_in_vsync =>pixel_in_vsync,
 			line_count => line_count );
 	
 	
@@ -186,11 +186,11 @@ pixel_counter0 : pixel_counter
 				block_ypos <= (others => '0') ;
 				top_left_cornery <= (others => '0') ;
 			elsif clk'event and clk = '1' then
-				if vsync = '1' then
+				ifpixel_in_vsync = '1' then
 					block_yaddress <= (others => '0') ;
 					top_left_cornery <= (others => '0') ;
 					block_ypos <= (others => '0') ;
-				elsif hsync_re = '1' then
+				elsifpixel_in_hsync_re = '1' then
 					if  block_ypos = (HEIGHT/TILE_NBY - 1) then
 						block_yaddress <= block_yaddress  + 1  ;
 						top_left_cornery <= line_count ;

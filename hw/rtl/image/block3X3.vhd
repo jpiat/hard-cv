@@ -42,8 +42,8 @@ entity block3X3 is
 		port(
 			clk : in std_logic; 
 			resetn : in std_logic; 
-			pixel_clock, hsync, vsync : in std_logic; 
-			pixel_data_in : in std_logic_vector(7 downto 0 ); 
+			pixel_in_clk, pixel_in_hsync, pixel_in_vsync : in std_logic; 
+			pixel_in_data : in std_logic_vector(7 downto 0 ); 
 			new_block : out std_logic ;
 			block_out : out matNM(0 to 2, 0 to 2));
 end block3X3;
@@ -75,7 +75,7 @@ signal enable_line0_latches, enable_line1_latches, enable_lines_latches : std_lo
 signal nb_line : std_logic_vector((nbit(HEIGHT) - 1) downto 0) := (others => '0');
 signal pixel_counterq, pixel_counterq_delayed : std_logic_vector((nbit(WIDTH) - 1) downto 0) := (others => '0');
 
-signal old_pixel_clock, pixel_clock_rising_edge, new_blockq : std_logic ;
+signal old_pixel_in_clk, pixel_in_clk_rising_edge, new_blockq : std_logic ;
 
 begin
 
@@ -106,9 +106,9 @@ LINE1_INPUT(7 downto 0) <= std_block3x3(2,2)(7 downto 0);
 INPUT_LINES(15 downto 8) <= LINE0_INPUT(7 downto 0) ;
 INPUT_LINES(7 downto 0) <=  LINE1_INPUT(7 downto 0) ; 
  
-lpixel_data <= ( '0' & pixel_data_in) ;
+lpixel_data <= ( '0' & pixel_in_data) ;
 
-enable_lines_latches <= (NOT hsync and pixel_clock) ;
+enable_lines_latches <= (NOT pixel_in_hsync and pixel_in_clk) ;
 
 enable_line0_latches <= enable_lines_latches when nb_line > 0 else
 								'0' ;
@@ -118,18 +118,18 @@ enable_line1_latches <= enable_lines_latches when nb_line > 1 else
 process(clk, resetn)
 begin
 	if resetn = '0' then
-		old_pixel_clock <= '0' ;
+		old_pixel_in_clk <= '0' ;
 	elsif clk'event and clk = '1' then
-		old_pixel_clock <= pixel_clock ;
-		if hsync = '1' then
+		old_pixel_in_clk <= pixel_in_clk ;
+		if pixel_in_hsync = '1' then
 			new_blockq <= '0' ;
 		else
-			new_blockq <= pixel_clock_rising_edge ;
+			new_blockq <= pixel_in_clk_rising_edge ;
 		end if ;		
 	end if ;
 end process ;
-pixel_clock_rising_edge <= ((NOT old_pixel_clock) AND pixel_clock) ;
---new_blockq <= pixel_clock_rising_edge when hsync = '0' else -- would rise too early
+pixel_in_clk_rising_edge <= ((NOT old_pixel_in_clk) AND pixel_in_clk) ;
+--new_blockq <= pixel_in_clk_rising_edge when pixel_in_hsync = '0' else -- would rise too early
 --				 '0' ;
 new_block <= new_blockq ;
 
@@ -150,7 +150,7 @@ gen_latches_row : for I in 0 to 2 generate
 						  port map(
 							clk => clk ,
 							resetn => resetn ,
-							sraz => vsync ,
+							sraz => pixel_in_vsync ,
 							en => enable_lines_latches,
 							d => std_block3x3(I,J+1), 
 							q => std_block3x3(I,J)
@@ -162,7 +162,7 @@ gen_latches_row : for I in 0 to 2 generate
 						  port map(
 							clk => clk ,
 							resetn => resetn ,
-							sraz => vsync ,
+							sraz => pixel_in_vsync ,
 							en => enable_lines_latches,
 							d => LINE0_OUTPUT, 
 							q => std_block3x3(0,2)
@@ -175,7 +175,7 @@ gen_latches_row : for I in 0 to 2 generate
 						  port map(
 							clk => clk ,
 							resetn => resetn ,
-							sraz => vsync ,
+							sraz => pixel_in_vsync ,
 							en => enable_lines_latches,
 							d => LINE1_OUTPUT, 
 							q => std_block3x3(1,2)
@@ -188,7 +188,7 @@ gen_latches_row : for I in 0 to 2 generate
 						  port map(
 							clk => clk ,
 							resetn =>resetn ,
-							sraz => vsync,
+							sraz => pixel_in_vsync,
 							en => enable_lines_latches,
 							d => lpixel_data, 
 							q => std_block3x3(2,2)
@@ -203,7 +203,7 @@ pixel_counter0: pixel_counter
 		port map(
 			clk => clk,
 			resetn => resetn, 
-			pixel_clock => pixel_clock, hsync => hsync,
+			pixel_in_clk => pixel_in_clk, pixel_in_hsync => pixel_in_hsync,
 			pixel_count => pixel_counterq
 			);
 			
@@ -212,7 +212,7 @@ delay_counter: edge_triggered_latch
 		port map(
 			clk => clk ,
 			resetn =>resetn ,
-			sraz => hsync,
+			sraz => pixel_in_hsync,
 			en => enable_lines_latches,
 			d => pixel_counterq, 
 			q => pixel_counterq_delayed
@@ -223,7 +223,7 @@ line_counter0: line_counter
 		port map(
 			clk => clk,
 			resetn => resetn, 
-			hsync => hsync, vsync => vsync, 
+			pixel_in_hsync => pixel_in_hsync, pixel_in_vsync => pixel_in_vsync, 
 			line_count => nb_line
 			);
 			

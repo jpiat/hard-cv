@@ -66,7 +66,7 @@ elsif clk'event and clk = '1' then
 			if data_present = '1' then
 				read_data <= '1' ;
 				conf_module_state0 <= READ_DATA_STATE;
-			elsif vsync = '1' then
+			elsifpixel_in_vsync = '1' then
 				read_data <= '0' ;
 				registers <= register_array0 ;
 				conf_module_state0 <= OUTPUT_DATA_STATE;
@@ -78,7 +78,7 @@ elsif clk'event and clk = '1' then
 			conf_module_state0 <= WAIT_DATA_STATE;
 		when OUTPUT_DATA_STATE =>
 			register_index <= (others => '0') ;
-			if vsync = '0' then
+			ifpixel_in_vsync = '0' then
 				conf_module_state0 <= WAIT_DATA_STATE;
 			end if;
 	end case ;

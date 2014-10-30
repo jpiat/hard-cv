@@ -3,8 +3,7 @@ library IEEE;
         use IEEE.std_logic_unsigned.all;
 
 library work ;
-	use work.camera.all ;
-	use work.generic_components.all ;
+	use work.interface_pack.all ;
 
 
 entity camera_interface_testbench is
@@ -25,10 +24,13 @@ architecture test of camera_interface_testbench is
 	signal binarized_pixel : std_logic_vector(7 downto 0);
 
 	signal data_to_send : std_logic_vector(7 downto 0);
-	signal pxclk_from_camera, href_from_camera, vsync_from_camera : std_logic ;
-	signal pxclk_from_interface, href_from_interface, vsync_from_interface : std_logic ;
-	signal pxclk_from_erode, href_from_erode, vsync_from_erode : std_logic ;
+	signal pxclk_from_camera, href_from_camera,pixel_in_vsync_from_camera : std_logic ;
+	signal pxclk_from_interface, href_from_interface,pixel_in_vsync_from_interface : std_logic ;
+	signal pxclk_from_erode, href_from_erode,pixel_in_vsync_from_erode : std_logic ;
 	signal send_data, scl, sda : std_logic ;
+	
+	signal pixel_data : std_logic_vector(31 downto 0) := X"AA" & X"BB" & X"CC" & X"DD";
+	
 	begin
 	
 	process(clk) -- reset process
@@ -45,43 +47,17 @@ architecture test of camera_interface_testbench is
 	
 	
 	camera0: yuv_camera_interface
-		generic map(FORMAT => VGA)
 		port map(clock => clk,
-		pixel_data => pixel_from_camera, 
- 		i2c_clk => clk,
- 		resetn => resetn_delayed,
- 		pxclk => pxclk_from_camera, href => href_from_camera, vsync => vsync_from_camera,
- 		pixel_clock_out => pxclk_from_interface, hsync_out => href_from_interface, vsync_out => vsync_from_interface,
- 		y_data => pixely_from_interface, 
-		u_data => pixelu_from_interface, 
-		v_data => pixelv_from_interface, 
-		scl => scl,
-		sda => sda
+					pixel_data => pixel_from_camera, 
+					resetn => resetn_delayed,
+					pxclk => pxclk_from_camera, href => href_from_camera,pixel_in_vsync =>pixel_in_vsync_from_camera,
+					pixel_out_clk => pxclk_from_interface, pixel_out_hsync => href_from_interface, pixel_out_vsync =>pixel_in_vsync_from_interface,
+					y_data => pixely_from_interface, 
+					u_data => pixelu_from_interface, 
+					v_data => pixelv_from_interface
 		);
-	
-	
-		bin0 : binarization
-		port map( 
-				pixel_data_in => pixely_from_interface,
-				upper_bound	=> X"50",
-				lower_bound	=> X"00",
-				pixel_data_out => binarized_pixel 
-		);
-	
-		erode0 : erode3x3
-		generic map(
-		  WIDTH => 640, 
-		  HEIGHT => 480)
-		port map(
-				clk => clk,  
-				resetn => resetn_delayed ,  
-				pixel_clock => pxclk_from_interface, hsync => href_from_interface, vsync => vsync_from_interface,
-				pixel_clock_out => pxclk_from_erode, hsync_out => href_from_erode, vsync_out => vsync_from_erode, 
-				pixel_data_in => binarized_pixel, 
-				pixel_data_out => pixel_from_erode
 
-		);  
-
+pixel_from_camera <= pixel_data(7 downto 0);
 
 process
 	begin
@@ -97,9 +73,8 @@ process
 		pxclk_from_camera <= '0';
 		if px_count < 640 * 2 and line_count >= 20 and line_count < 497 then
 			href_from_camera <= '1' ;
-			pixel_from_camera <= pixel_from_camera + 1;
 		else
-				pixel_from_camera <= (others => '0');
+				pixel_data <= X"AA" & X"BB" & X"CC" & X"DD";
 				href_from_camera <= '0' ;
 		end if ;
 
@@ -129,7 +104,8 @@ process
 		end if ;
 		
 		wait for pclk_period;
-
+		pixel_data(31 downto 8) <= pixel_data(23 downto 0);
+		pixel_data(7 downto 0) <= pixel_data(31 downto 24) ;
 	end process;
 	
 end test ;

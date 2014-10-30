@@ -46,47 +46,16 @@ architecture Behavioral of generic_delay is
 	signal delay_line : delay_array ;
 begin
 
-gen_delay : for i in 0 to DELAY generate
-	gen_unitary : if i = 0 and DELAY = 1 generate
-						latch_unitary : generic_latch
-							generic map(NBIT => WIDTH)
-							 port map ( clk => clk,
-									  resetn => resetn ,
-									  sraz => '0' ,
-									  en => '1' ,
-									  d => input ,
-									  q => output);
-					end generate ;
-	gen_input : if i = 0 and DELAY > 1 generate
-						latch_0 : generic_latch
-							generic map(NBIT => WIDTH)
-							 port map ( clk => clk,
-									  resetn => resetn ,
-									  sraz => '0' ,
-									  en => '1' ,
-									  d => input ,
-									  q => delay_line(0));
-					end generate ;
-	gen_delay :if i > 0 and DELAY > 1 and i < DELAY generate
-						latch_i : generic_latch
-							generic map(NBIT => WIDTH)
-							 port map ( clk => clk,
-									  resetn => resetn ,
-									  sraz => '0' ,
-									  en => '1' ,
-									  d => delay_line(i-1) ,
-									  q => delay_line(i));
-					end generate ;
-	gen_output :if i = DELAY and DELAY > 1 generate
-						latch_delay : generic_latch
-							generic map(NBIT => WIDTH)
-							 port map ( clk => clk,
-									  resetn => resetn ,
-									  sraz => '0' ,
-									  en => '1' ,
-									  d => delay_line(i-1) ,
-									  q => output);
-					end generate ;
-end generate ;
+process(clk, resetn)
+begin
+	if resetn = '0' then
+		delay_line <= (others => (others => '0'));
+	elsif clk'event and clk = '1' then
+		delay_line(0) <= input ;
+		delay_line(1 to delay_line'high) <= delay_line(0 to delay_line'high-1);
+		output <= delay_line(delay_line'high);
+	end if ;
+end process ;
+
 end Behavioral;
 

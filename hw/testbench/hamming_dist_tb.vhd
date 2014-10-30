@@ -76,7 +76,7 @@ BEGIN
  
 	-- Instantiate the Unit Under Test (UUT)
    uut: HAMMING_DIST 
-	GENERIC MAP(WIDTH => 64, CYCLES => 4)
+	GENERIC MAP(WIDTH => 64, CYCLES => 1)
 	PORT MAP (
           clk => clk,
           resetn => resetn,

@@ -42,11 +42,11 @@ generic(LINE_SIZE : natural := 640);
 port(
  		clk : in std_logic; 
  		resetn: in std_logic; 
- 		pixel_clock, hsync, vsync : in std_logic;
- 		pixel_data_in : in std_logic_vector(7 downto 0 );
+ 		pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic;
+ 		pixel_in_data : in std_logic_vector(7 downto 0 );
 		blob_data : out std_logic_vector(7 downto 0);
 		
-		--memory_interface to copy results on vsync
+		--memory_interface to copy results onpixel_in_vsync
 		mem_addr : out std_logic_vector(15 downto 0);
 		mem_data : inout std_logic_vector(15 downto 0);
 		mem_wr : out std_logic
@@ -60,7 +60,7 @@ type blob_states is (WAIT_VSYNC, WAIT_HSYNC, WAIT_PIXEL, COMPARE_PIXEL, ADD_TO_B
 
 signal blob_state0 : blob_states ;
 signal pixel_x, pixel_y : std_logic_vector(9 downto 0);
-signal hsync_old: std_logic := '0';
+signalpixel_in_hsync_old: std_logic := '0';
 signal sraz_neighbours, sraz_blobs : std_logic ;
 signal neighbours0 : pix_neighbours;
 signal new_line, add_neighbour, add_pixel, merge_blob, new_blob, oe_blob : std_logic ;
@@ -68,13 +68,13 @@ signal current_pixel : std_logic_vector(7 downto 0) ;
 signal new_blob_index, current_blob, blob_index_to_merge, true_blob_index : unsigned(7 downto 0) ;
 signal has_neighbour : std_logic ;
 signal is_blob_pixel : std_logic ;
-signal pixel_clock_old, pixel_clock_re : std_logic ;
-signal vsync_fe, vsync_re, vsync_old : std_logic ;
+signal pixel_in_clk_old, pixel_in_clk_re : std_logic ;
+signalpixel_in_vsync_fe,pixel_in_vsync_re,pixel_in_vsync_old : std_logic ;
 signal blob_class : std_logic_vector(7 downto 0) ;
 begin
 
 
-sraz_blobs <= vsync_fe ;
+sraz_blobs <=pixel_in_vsync_fe ;
 
 blobs0: blob_manager 
 	generic map(NB_BLOB => 32)
@@ -89,8 +89,8 @@ blobs0: blob_manager
 		add_pixel => add_pixel,
 		pixel_posx => unsigned(pixel_x), pixel_posy => unsigned(pixel_y),
 		
-		send_blobs => vsync_re,
-		--memory_interface to copy results on vsync
+		send_blobs =>pixel_in_vsync_re,
+		--memory_interface to copy results onpixel_in_vsync
 		mem_addr => mem_addr,
 		mem_data => mem_data,
 		mem_wr => mem_wr
@@ -101,8 +101,8 @@ update_neighbours : neighbours
 		port map(
 			clk => clk, 
 			resetn => resetn , sraz => sraz_neighbours, 
-			pixel_clock => pixel_clock, hsync => hsync, 
-         vsync => vsync,			
+			pixel_in_clk => pixel_in_clk,pixel_in_hsync =>pixel_in_hsync, 
+        pixel_in_vsync =>pixel_in_vsync,			
 			neighbour_in => current_blob,
 			neighbours => neighbours0);
 			
@@ -110,7 +110,7 @@ pixel_counter0: pixel_counter
 		port map(
 			clk => clk,
 			resetn => resetn, 
-			pixel_clock => pixel_clock, hsync => hsync,
+			pixel_in_clk => pixel_in_clk,pixel_in_hsync =>pixel_in_hsync,
 			pixel_count => pixel_x
 			);
 			
@@ -119,7 +119,7 @@ line_counter0: line_counter
 		port map(
 			clk => clk,
 			resetn => resetn, 
-			hsync => hsync, vsync => vsync, 
+			hsync =>pixel_in_hsync,pixel_in_vsync =>pixel_in_vsync, 
 			line_count => pixel_y(8 downto 0)
 			);
 pixel_y(9) <= '0' ;
@@ -133,19 +133,19 @@ current_blob <= neighbours0(3) when is_blob_pixel='1' and neighbours0(3) /= 0 el
 
 has_neighbour <= '1' when (neighbours0(3) /= 0) or (neighbours0(2) /= 0) or (neighbours0(1) /= 0) or (neighbours0(0) /= 0) else
 						'0' ;
-is_blob_pixel <= 	'1' when pixel_data_in /= x"00" and hsync = '0' else
+is_blob_pixel <= 	'1' when pixel_in_data /= x"00" andpixel_in_hsync = '0' else
 						'0';
-blob_class <= 	pixel_data_in ;				
+blob_class <= 	pixel_in_data ;				
 
-new_blob <= pixel_clock_re when is_blob_pixel = '1' and has_neighbour = '0' else
+new_blob <= pixel_in_clk_re when is_blob_pixel = '1' and has_neighbour = '0' else
 				'0' ;
-add_pixel <= pixel_clock_re when is_blob_pixel='1' and has_neighbour /= '0' else
+add_pixel <= pixel_in_clk_re when is_blob_pixel='1' and has_neighbour /= '0' else
 				 '0' ;
 					 
-add_neighbour <= pixel_clock when hsync = '0' else
+add_neighbour <= pixel_in_clk whenpixel_in_hsync = '0' else
 					  '0' ;
-merge_blob <= pixel_clock_re when neighbours0(0) /= 0 and neighbours0(2) /= 0 and neighbours0(0) /= neighbours0(2) and is_blob_pixel='1' else
-				  pixel_clock_re when neighbours0(3) /= 0 and neighbours0(2) /= 0 and neighbours0(3) /= neighbours0(2) and is_blob_pixel='1' else
+merge_blob <= pixel_in_clk_re when neighbours0(0) /= 0 and neighbours0(2) /= 0 and neighbours0(0) /= neighbours0(2) and is_blob_pixel='1' else
+				  pixel_in_clk_re when neighbours0(3) /= 0 and neighbours0(2) /= 0 and neighbours0(3) /= neighbours0(2) and is_blob_pixel='1' else
 				  '0' ;
 				  
 blob_index_to_merge <= neighbours0(2) ;
@@ -154,16 +154,16 @@ blob_index_to_merge <= neighbours0(2) ;
 process(clk, resetn)
 begin
 	if resetn = '0' then
-		pixel_clock_old <= '0' ;
+		pixel_in_clk_old <= '0' ;
 		vsync_old <= '0' ;
 	elsif clk'event and clk = '1' then
-		pixel_clock_old <= pixel_clock ;
-		vsync_old <= vsync ;
+		pixel_in_clk_old <= pixel_in_clk ;
+		vsync_old <=pixel_in_vsync ;
 	end if ;
 end process ;
-pixel_clock_re <= (NOT pixel_clock_old) and pixel_clock ;
-vsync_fe <= vsync_old and (NOT vsync) ;
-vsync_re <= (NOT vsync_old) and vsync ;
+pixel_in_clk_re <= (NOT pixel_in_clk_old) and pixel_in_clk ;
+vsync_fe <=pixel_in_vsync_old and (NOTpixel_in_vsync) ;
+vsync_re <= (NOTpixel_in_vsync_old) andpixel_in_vsync ;
 
 end Behavioral;
 

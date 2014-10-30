@@ -174,7 +174,6 @@ full <= '1' when nb_available_t = N else
 
 
 wr_data <= fifo_wr ;
--- wr_data <= wr ; -- oldway
 
 end Behavioral;
 

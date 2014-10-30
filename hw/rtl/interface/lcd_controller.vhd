@@ -40,7 +40,7 @@ entity lcd_controller is
 port(
  		clk : in std_logic; 
  		resetn : in std_logic; 
- 		pixel_clock, hsync, vsync : in std_logic; 
+ 		pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
  		pixel_r, pixel_g, pixel_b : in std_logic_vector(7 downto 0 );
 		lcd_rs, lcd_cs, lcd_rd, lcd_wr	:	 out std_logic;
 	   lcd_data	:	out std_logic_vector(15 downto 0) 
@@ -123,12 +123,12 @@ if resetn = '0' then
 	pxclk_old <= '0' ;
 	pxclk_rising <= '0' ;
 elsif clk'event and clk = '1' then
-	if pxclk_old /= pixel_clock and pixel_clock = '1' and hsync = '0' and pixel_count < 320 then
+	if pxclk_old /= pixel_in_clk and pixel_in_clk = '1' andpixel_in_hsync = '0' and pixel_count < 320 then
 		pxclk_rising <= '1' ;
 	else
 		pxclk_rising <= '0' ;
 	end if ;
-	pxclk_old <= pixel_clock ;
+	pxclk_old <= pixel_in_clk ;
 end if ;
 end process ;
 
@@ -143,7 +143,7 @@ end if ;
 end process ;
 
 
-process(state, vsync, lcd_busy, register_data, count)
+process(state,pixel_in_vsync, lcd_busy, register_data, count)
 begin
 next_state <= state ;
 case state is
@@ -162,13 +162,13 @@ case state is
 			next_state <= LCD_INIT ;
 		end if;
 	WHEN WAIT_VSYNC => 
-		if vsync = '1' then
+		ifpixel_in_vsync = '1' then
 			next_state <= LCD_VSYNC ;
 		end if ;
 	WHEN SET_X => 
 		next_state <= WAIT_DONE_X ;
 	WHEN WAIT_DONE_X => 
-		if lcd_busy = '0' and vsync = '1' then
+		if lcd_busy = '0' andpixel_in_vsync = '1' then
 			next_state <= SET_Y ;
 		elsif lcd_busy = '0' then
 			next_state <= LCD_HSYNC ;
@@ -180,17 +180,17 @@ case state is
 			next_state <= LCD_VSYNC ;
 		end if ;
 	WHEN LCD_VSYNC => 
-		if vsync = '0' then
+		ifpixel_in_vsync = '0' then
 			next_state <= LCD_VIDEO ;
 		end if ;
 	WHEN LCD_HSYNC => 
-		if hsync = '0' then
+		ifpixel_in_hsync = '0' then
 			next_state <= LCD_VIDEO ;
 		end if ;
 	WHEN LCD_VIDEO =>
-		if vsync = '1' then
+		ifpixel_in_vsync = '1' then
 			next_state <= SET_X ;
---		elsif hsync = '1' then
+--		elsifpixel_in_hsync = '1' then
 --			next_state <= SET_X ;
 		end if ;
 	WHEN others => 
@@ -238,11 +238,11 @@ wr_lcd <=  '1' when state = LCD_INIT and register_data(23 downto 16) /= X"FF" el
 set_addr_lcd <= '1' when state = LCD_INIT and register_data(23 downto 16) /= X"FF" else
 					 '1' when state = SET_X else
 					 '1' when state = SET_Y else
-					 (NOT vsync) when state = LCD_VSYNC else
-					 (NOT hsync) when state = LCD_HSYNC else
+					 (NOTpixel_in_vsync) when state = LCD_VSYNC else
+					 (NOTpixel_in_hsync) when state = LCD_HSYNC else
 					  '0' ;	
 
-sraz_pixel_count <= hsync ;
+sraz_pixel_count <=pixel_in_hsync ;
 
 end Behavioral;
 

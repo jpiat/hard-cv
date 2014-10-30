@@ -215,7 +215,7 @@ architecture ov7670_vga of yuv_register_rom is
 	-- CONFIGURATION TAKEN FROM OV7670.c IN LINUX KERNEL DRIVERS
 	signal rom : array_160 :=( 
 	(X"12" & X"80"),
-	(X"11" & X"01"), -- OV: clock scale (30 fps)
+	(X"11" & X"03"), -- OV: clock scale (30 fps)
 	(X"3a" & X"04"), -- OV
 	(X"12" & X"00"), -- VGA
 	(X"8C" & X"00"), -- 

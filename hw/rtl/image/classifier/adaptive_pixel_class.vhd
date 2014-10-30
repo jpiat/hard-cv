@@ -36,10 +36,10 @@ generic(image_width : positive := 320; image_height : positive := 240; nb_class 
 port(
 	clk : in std_logic; 
 	resetn : in std_logic; 
-	pixel_clock, hsync, vsync : in std_logic; 
-	pixel_data_in : in std_logic_vector(7 downto 0 ); 
-	pixel_clock_out, hsync_out, vsync_out : out std_logic; 
-	pixel_data_out : out std_logic_vector(7 downto 0 ); 
+	pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+	pixel_in_data : in std_logic_vector(7 downto 0 ); 
+	pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic; 
+	pixel_out_data : out std_logic_vector(7 downto 0 ); 
 	chist_addr : out std_logic_vector(7 downto 0);
 	chist_data : in std_logic_vector(31 downto 0);
 	chist_available : in std_logic ;
@@ -64,27 +64,27 @@ component dpram_NxN is
 end component;
 
 constant pixel_per_class : integer := (image_width*image_height)/nb_class;
-signal chist_addr_d : std_logic_vector(7 downto 0);
+signal chist_addr_d, chist_addr_dd : std_logic_vector(7 downto 0);
 signal nb_pixel_threshold : std_logic_vector(31 downto 0) ;
 signal pixel_class : std_logic_vector(7 downto 0);
 
 signal write_lut : std_logic ;
 signal lut_write_addr : std_logic_vector(7 downto 0);
-signal chist_available_d : std_logic ;
-signal done : std_logic ;
+signal chist_available_d, chist_available_old, chist_available_re : std_logic ;
+signal done, old_done, done_re : std_logic ;
 begin
 
 -- one cycle delay on control signals
 process(clk, resetn)
 begin
 	if resetn = '0' then
-		pixel_clock_out <= '0' ;
-		hsync_out <= '1' ;
-		vsync_out <= '1' ;
+		pixel_out_clk <= '0' ;
+		pixel_out_hsync <= '1' ;
+		pixel_out_vsync <= '1' ;
 	elsif clk'event and clk = '1' then
-		pixel_clock_out <= pixel_clock ;
-		hsync_out <= hsync ;
-		vsync_out <= vsync ;
+		pixel_out_clk <= pixel_in_clk ;
+		pixel_out_hsync <=pixel_in_hsync ;
+		pixel_out_vsync <=pixel_in_vsync ;
 	end if ;
 end process ;
 
@@ -97,9 +97,9 @@ pixel_lut : dpram_NxN
 		we => write_lut, 
 		di => pixel_class ,
 		a	=> lut_write_addr,
-		dpra => pixel_data_in,
+		dpra => pixel_in_data,
 		spo => open,
-		dpo => pixel_data_out 	
+		dpo => pixel_out_data 	
 	);
 	
 	
@@ -111,16 +111,18 @@ begin
 		nb_pixel_threshold <= (others => '0');
 		chist_available_d <= '0' ;
 	elsif clk'event and clk = '1' then
-		if chist_available = '1' and chist_addr_d < 255 and done = '0' then
+		if chist_available = '1' and chist_addr_d < 255 and done = '0' and chist_data < nb_pixel_threshold then
 			chist_addr_d <= chist_addr_d + 1 ;
-		elsif chist_available = '1' then
+		elsif chist_available = '0' then
 			-- reset chist
 			chist_addr_d <= (others => '0');
 		end if ;
+	
+
 		chist_available_d <= chist_available ;
 		lut_write_addr <= chist_addr_d ; -- delaying write address of one clock cycle
 		
-		if chist_data >= nb_pixel_threshold and chist_available_d = '1' and chist_addr_d < 255 then
+		if chist_data >= nb_pixel_threshold and chist_available_d = '1' then 
 			pixel_class <= pixel_class + 1 ;
 			nb_pixel_threshold <= nb_pixel_threshold + std_logic_vector(to_unsigned(pixel_per_class,32));
 		elsif chist_available_d = '0' then
@@ -134,17 +136,20 @@ process(clk, resetn)
 begin
 	if resetn = '0' then
 		done <= '0' ;
+		old_done <= '0' ;
 	elsif clk'event and clk = '1' then
-		if chist_available = '0' then
-			done <= '0' ;
-		elsif lut_write_addr = 255 then
+		if lut_write_addr = 255 and chist_data <= nb_pixel_threshold then
 			done <= '1' ;
+		elsif chist_available_re = '1' then
+			done <= '0' ;
 		end if ;
+		old_done <= done ;
 	end if ;
 end process ;		
+chist_available_re <= (not chist_available_d) and chist_available ;
+done_re <= (not old_done) and done ;
 	
-	
-chist_reset <= '1' when lut_write_addr = 255 else
+chist_reset <= '1' when done_re = '1' else
 					'0' ;
 write_lut <= '1' when (chist_available_d = '1' or lut_write_addr > 0)  and done='0' else -- wont write first class
 				 '0' ;

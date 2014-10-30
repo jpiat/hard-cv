@@ -51,15 +51,15 @@ ARCHITECTURE behavior OF sobel3x3_pipeline IS
    --Inputs
    signal clk : std_logic := '0';
    signal resetn : std_logic := '0';
-   signal pixel_clock : std_logic := '0';
-   signal hsync : std_logic := '0';
-   signal vsync : std_logic := '0';
-   signal pixel_data_in : std_logic_vector(7 downto 0) := (others => '0');
+   signal pixel_in_clk : std_logic := '0';
+   signal pixel_in_hsync : std_logic := '0';
+   signal pixel_in_vsync : std_logic := '0';
+   signal pixel_in_data : std_logic_vector(7 downto 0) := (others => '0');
 
  	--Outputs
-   signal pixel_clock_out : std_logic;
-   signal hsync_out : std_logic;
-   signal vsync_out : std_logic;
+   signal pixel_out_clk : std_logic;
+   signal pixel_out_hsync : std_logic;
+   signal pixel_out_vsync : std_logic;
    signal grad_out : std_logic_vector(7 downto 0);
 
 	signal end_of_block, latch_max : std_logic ;
@@ -80,8 +80,8 @@ BEGIN
 		port map(
 				clk => clk, 
 				resetn => resetn,
-				pixel_data =>  pixel_data_in,
-				pixel_clock_out => pixel_clock, hsync_out => hsync, vsync_out => vsync );
+				pixel_data =>  pixel_in_data,
+				pixel_out_clk => pixel_in_clk, pixel_out_hsync =>pixel_in_hsync, pixel_out_vsync =>pixel_in_vsync );
  
  
  
@@ -90,10 +90,10 @@ generic map(WIDTH => 320,
 		  HEIGHT => 240)
 port map(
  		resetn => resetn,
- 		pixel_clock => pixel_clock, hsync => hsync, vsync => vsync,
- 		pixel_clock_out => pixel_clock_out, hsync_out => hsync_out, vsync_out=> vsync_out,
- 		pixel_data_in => pixel_data_in, 
- 		pixel_data_out => grad_out,
+ 		pixel_in_clk => pixel_in_clk,pixel_in_hsync =>pixel_in_hsync,pixel_in_vsync =>pixel_in_vsync,
+ 		pixel_out_clk => pixel_out_clk, pixel_out_hsync => pixel_out_hsync, pixel_out_vsync=> pixel_out_vsync,
+ 		pixel_in_data => pixel_in_data, 
+ 		pixel_out_data => grad_out,
 		x_grad	=> open,
 		y_grad	=> open
 );
@@ -104,7 +104,7 @@ port map(
 		port map(
 		clk => clk,
 		resetn=> resetn , 
-		pixel_clock => pixel_clock_out, hsync => hsync_out, vsync => vsync_out, 
+		pixel_in_clk => pixel_out_clk,pixel_in_hsync => pixel_out_hsync,pixel_in_vsync => pixel_out_vsync, 
 		value_in => (x"00"&grad_out)
 		);
 
@@ -129,7 +129,7 @@ port map(
 --
 --process
 --	begin
---		pixel_clock <= '0';
+--		pixel_in_clk <= '0';
 --		if px_count < 320 and line_count >= 20 and line_count < 257 then
 --				hsync <= '0' ;
 --		else
@@ -143,7 +143,7 @@ port map(
 --		end if ;
 --		wait for pclk_period;
 --		
---		pixel_clock <= '1';
+--		pixel_in_clk <= '1';
 --		if (px_count = 460 ) then
 --			px_count <= 0 ;
 --			if (line_count > 270) then
@@ -154,7 +154,7 @@ port map(
 --		else
 --		  px_count <= px_count + 1 ;
 --		end if ;
---		pixel_data_in <= pixel_data_in + 10 ;
+--		pixel_in_data <= pixel_in_data + 10 ;
 --		wait for pclk_period;
 --
 --	end process;

@@ -1,4 +1,4 @@
---
+-
 --	Package File Template
 --
 --	Purpose: This package defines supplemental types, subtypes, 
@@ -15,8 +15,8 @@ package classifier_pack is
 component color_classifier is
 port( clk	:	in std_logic ;
 		resetn	:	in std_logic ;
-		pixel_clock, hsync, vsync : in std_logic; 
-		pixel_clock_out, hsync_out, vsync_out : out std_logic; 
+		pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+		pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic; 
  		pixel_y : in std_logic_vector(7 downto 0) ;
 		pixel_u : in std_logic_vector(7 downto 0) ;
 		pixel_v : in std_logic_vector(7 downto 0) ;
@@ -35,10 +35,10 @@ generic(WIDTH: natural := 640;
 port(
  		clk : in std_logic; 
  		resetn : in std_logic; 
- 		pixel_clock, hsync, vsync : in std_logic; 
- 		pixel_clock_out, hsync_out, vsync_out : out std_logic; 
- 		pixel_data_in : in std_logic_vector(7 downto 0 ); 
- 		pixel_data_out : out std_logic_vector(7 downto 0 )
+ 		pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+ 		pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic; 
+ 		pixel_in_data : in std_logic_vector(7 downto 0 ); 
+ 		pixel_out_data : out std_logic_vector(7 downto 0 )
 
 );
 end component;
@@ -69,6 +69,24 @@ component yuv_classifier is
 		class_value : out std_logic_vector(2 downto 0)
 	);
 end component;
+
+component adaptive_pixel_class is
+generic(image_width : positive := 320; image_height : positive := 240; nb_class : positive := 16);
+port(
+	clk : in std_logic; 
+	resetn : in std_logic; 
+	pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+	pixel_in_data : in std_logic_vector(7 downto 0 ); 
+	pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic; 
+	pixel_out_data : out std_logic_vector(7 downto 0 ); 
+	chist_addr : out std_logic_vector(7 downto 0);
+	chist_data : in std_logic_vector(31 downto 0);
+	chist_available : in std_logic ;
+	chist_reset : out std_logic
+);
+end component;
+
+
 
 end classifier_pack;
 

@@ -43,10 +43,10 @@ generic(INVERT : natural := 0;
 port(
  		clk : in std_logic; 
  		resetn : in std_logic; 
- 		pixel_clock, hsync, vsync : in std_logic; 
- 		pixel_clock_out, hsync_out, vsync_out : out std_logic; 
- 		pixel_data_in : in std_logic_vector(7 downto 0 ); 
- 		pixel_data_out : out std_logic_vector(7 downto 0 )
+ 		pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+ 		pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic; 
+ 		pixel_in_data : in std_logic_vector(7 downto 0 ); 
+ 		pixel_out_data : out std_logic_vector(7 downto 0 )
 
 );
 end erode3x3;
@@ -65,8 +65,8 @@ begin
 		port map(
 			clk => clk ,
 			resetn => resetn , 
-			pixel_clock => pixel_clock , hsync => hsync , vsync => vsync,
-			pixel_data_in => pixel_data_in ,
+			pixel_in_clk => pixel_in_clk ,pixel_in_hsync =>pixel_in_hsync ,pixel_in_vsync =>pixel_in_vsync,
+			pixel_in_data => pixel_in_data ,
 			new_block => new_block,
 			block_out => block3x3_sig);
 		
@@ -94,19 +94,19 @@ begin
            sraz => '0' ,
            en => new_block ,
            d => result,
-           q => pixel_data_out );
+           q => pixel_out_data );
 	
 		--sync signals latch
 		process(clk, resetn)
 		begin
 			if resetn = '0' then 
-				pixel_clock_out <= '0' ;
-				hsync_out <= '0' ;
-				vsync_out <= '0' ;
+				pixel_out_clk <= '0' ;
+				pixel_out_hsync <= '0' ;
+				pixel_out_vsync <= '0' ;
 			elsif clk'event and clk = '1'  then
-				pixel_clock_out <= new_block ;
-				hsync_out <= hsync ;
-				vsync_out <= vsync ;
+				pixel_out_clk <= new_block ;
+				pixel_out_hsync <=pixel_in_hsync ;
+				pixel_out_vsync <=pixel_in_vsync ;
 			end if ;
 		end process ;
 

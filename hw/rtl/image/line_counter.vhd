@@ -38,29 +38,29 @@ entity line_counter is
 		port(
 			clk : in std_logic; 
 			resetn : in std_logic; 
-			hsync, vsync : in std_logic; 
+			pixel_in_hsync,pixel_in_vsync : in std_logic; 
 			line_count : out std_logic_vector((nbit(MAX) - 1) downto 0 )
 			);
 end line_counter;
 
 architecture Behavioral of line_counter is
 
-signal hsync_old : std_logic ;
+signal pixel_in_hsync_old : std_logic ;
 signal line_count_temp : std_logic_vector((nbit(MAX) - 1) downto 0 ) ;
 begin
 
--- count lines on rising edge of hsync
+-- count lines on rising edge ofpixel_in_hsync
 process(clk, resetn)
 begin
 if resetn = '0' then 
 	line_count_temp <= (others => '0') ;
 elsif clk'event and clk = '1'  then
-		if vsync = '1' then
+		if pixel_in_vsync = '1' then
 			line_count_temp <= (others => '0') ;
-		elsif hsync /= hsync_old and hsync = POL then
+		elsif pixel_in_hsync /= pixel_in_hsync_old and pixel_in_hsync = POL then
 			line_count_temp <= line_count_temp + 1 ;
 		end if ;
-		hsync_old <= hsync ;
+		pixel_in_hsync_old <=pixel_in_hsync ;
 end if ;
 end process ;
 

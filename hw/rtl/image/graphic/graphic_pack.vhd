@@ -14,7 +14,7 @@ package graphic_pack is
 
 component graphic_generator is
 port(clk, resetn : in  std_logic ;
-	  pixel_clock_out, hsync_out, vsync_out : out		std_logic ;
+	  pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out		std_logic ;
 	  pixel_r, pixel_g, pixel_b	:	out	 std_logic_vector(7 downto 0)
 	  );
 end component;
@@ -24,10 +24,10 @@ port(
  		clk : in std_logic; 
  		resetn : in std_logic; 
 		posx, posy, width, height : in unsigned(9 downto 0);
- 		pixel_clock, hsync, vsync : in std_logic; 
- 		pixel_clock_out, hsync_out, vsync_out : out std_logic; 
- 		pixel_data_in : in std_logic_vector(7 downto 0 ); 
- 		pixel_data_out : out std_logic_vector(7 downto 0 )
+ 		pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+ 		pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic; 
+ 		pixel_in_data : in std_logic_vector(7 downto 0 ); 
+ 		pixel_out_data : out std_logic_vector(7 downto 0 )
 	);
 end component;
 

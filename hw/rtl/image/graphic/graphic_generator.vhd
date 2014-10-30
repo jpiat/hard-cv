@@ -35,7 +35,7 @@ use work.generic_components.all ;
 
 entity graphic_generator is
 port(clk, resetn : in  std_logic ;
-	  pixel_clock_out, hsync_out, vsync_out : out		std_logic ;
+	  pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out		std_logic ;
 	  pixel_r, pixel_g, pixel_b	:	out	 std_logic_vector(7 downto 0)
 	  );
 end graphic_generator;
@@ -110,12 +110,12 @@ sraz_line_count <= '1' when line_count >= 270 else
 valid_pixel <= '1' when pixel_count < 320 and line_count >= 20 and line_count < 257 else
 					'0' ; 
 
-hsync_out <= NOT valid_pixel ;
+pixel_out_hsync <= NOT valid_pixel ;
 			
-vsync_out <= '1' when line_count < 3 else
+pixel_out_vsync <= '1' when line_count < 3 else
 			'0' ;
 
-pixel_clock_out <= clock_div(div_factor) and valid_pixel ;
+pixel_out_clk <= clock_div(div_factor) and valid_pixel ;
 
 
 pixel_r <= line_count(9 downto 2);

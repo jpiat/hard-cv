@@ -40,10 +40,10 @@ generic(WIDTH: natural := 320;
 		  HEIGHT: natural := 240);
 port(
  		resetn : in std_logic; 
- 		pixel_clock, hsync, vsync : in std_logic; 
- 		pixel_clock_out, hsync_out, vsync_out : out std_logic; 
- 		pixel_data_in : in std_logic_vector(7 downto 0 ); 
- 		pixel_data_out : out std_logic_vector(7 downto 0 );
+ 		pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+ 		pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic; 
+ 		pixel_in_data : in std_logic_vector(7 downto 0 ); 
+ 		pixel_out_data : out std_logic_vector(7 downto 0 );
 		x_grad	:	out signed(7 downto 0);
 		y_grad	:	out signed(7 downto 0)
 );
@@ -67,8 +67,8 @@ begin
 		generic map(WIDTH =>  WIDTH, HEIGHT => HEIGHT)
 		port map(
 			resetn => resetn , 
-			pixel_clock => pixel_clock , hsync => hsync , vsync => vsync,
-			pixel_data_in => pixel_data_in ,
+			pixel_in_clk => pixel_in_clk ,pixel_in_hsync =>pixel_in_hsync ,pixel_in_vsync =>pixel_in_vsync,
+			pixel_in_data => pixel_in_data ,
 			block_out => block3x3_sig);
 		
 		
@@ -88,7 +88,7 @@ begin
 		x_mult_scal(1, 1) <= -SHIFT_LEFT(resize(block3x3_sig(1,2), 16),1);
 		x_mult_scal(1, 2) <= -resize(block3x3_sig(2,2), 16);
 				
-	process(pixel_clock, resetn)
+	process(pixel_in_clk, resetn)
 		begin
 			if resetn = '0' then		
 				y_add_vec(0) <= (others => '0') ;
@@ -97,7 +97,7 @@ begin
 				x_add_vec(0) <= (others => '0') ;
 				x_add_vec(1) <=(others => '0') ;
 				x_add_vec(2) <= (others => '0') ;
-			elsif pixel_clock'event and pixel_clock = '1' then	
+			elsif pixel_in_clk'event and pixel_in_clk = '1' then	
 				y_add_vec(0) <= y_mult_scal(0, 0) + y_mult_scal(1, 0) ;
 				y_add_vec(1) <=  y_mult_scal(0, 1) + y_mult_scal(1, 1) ;
 				y_add_vec(2) <=  y_mult_scal(0, 2) + y_mult_scal(1, 2) ;
@@ -107,7 +107,7 @@ begin
 			end if ;
 		end process ;
 		
-		process(pixel_clock, resetn)
+		process(pixel_in_clk, resetn)
 		begin
 			if resetn = '0' then
 				pipeline_add_stages_y(0,0) <= (others => '0') ;
@@ -119,7 +119,7 @@ begin
 				pipeline_add_stages_y(2,0) <= (others => '0') ;
 				pipeline_add_stages_y(2,1) <= (others => '0') ;
 				pipeline_add_stages_y(2,2) <= (others => '0') ;
-			elsif pixel_clock'event and pixel_clock = '1' then
+			elsif pixel_in_clk'event and pixel_in_clk = '1' then
 				pipeline_add_stages_y(0,0) <=  y_add_vec(0) ;
 				pipeline_add_stages_y(0,1) <=  y_add_vec(1) ;
 				pipeline_add_stages_y(0,2) <=  y_add_vec(2) ;
@@ -131,7 +131,7 @@ begin
 			end if ;
 		end process;
 		
-				process(pixel_clock, resetn)
+				process(pixel_in_clk, resetn)
 		begin
 			if resetn = '0' then
 				pipeline_add_stages_x(0,0) <= (others => '0') ;
@@ -143,7 +143,7 @@ begin
 				pipeline_add_stages_x(2,0) <= (others => '0') ;
 				pipeline_add_stages_x(2,1) <= (others => '0') ;
 				pipeline_add_stages_x(2,2) <= (others => '0') ;
-			elsif pixel_clock'event and pixel_clock = '1' then
+			elsif pixel_in_clk'event and pixel_in_clk = '1' then
 				pipeline_add_stages_x(0,0) <=  x_add_vec(0) ;
 				pipeline_add_stages_x(0,1) <=  x_add_vec(1) ;
 				pipeline_add_stages_x(0,2) <=  x_add_vec(2) ;
@@ -154,32 +154,32 @@ begin
 			end if ;
 		end process;
 		
-		process(pixel_clock, resetn)
+		process(pixel_in_clk, resetn)
 		begin
 			if resetn = '0' then
 				raw_from_conv1_latched <= (others => '0') ;
 				raw_from_conv2_latched <= (others => '0') ;
-			elsif pixel_clock'event and pixel_clock = '1' then
+			elsif pixel_in_clk'event and pixel_in_clk = '1' then
 				raw_from_conv1_latched <= pipeline_add_stages_x(2,2) ;
 				raw_from_conv2_latched <= pipeline_add_stages_y(2,2) ;
 			end if ;
 		end process ;
 		
 		sobel_response <= abs(raw_from_conv1_latched) + abs(raw_from_conv2_latched) ;
-		pixel_data_out <= std_logic_vector(sobel_response(10 downto 3));
+		pixel_out_data <= std_logic_vector(sobel_response(10 downto 3));
 		x_grad <= raw_from_conv1_latched(10 downto 3) ;
 		y_grad <= raw_from_conv2_latched(10 downto 3) ;
 		
 		delay_sync: generic_delay
 		generic map( WIDTH =>  2 , DELAY => 5)
 		port map(
-			clk => (pixel_clock), resetn => resetn ,
-			input(0) => hsync ,
-			input(1) => vsync ,
-			output(0) => hsync_out ,
-			output(1) => vsync_out
+			clk => (pixel_in_clk), resetn => resetn ,
+			input(0) =>pixel_in_hsync ,
+			input(1) =>pixel_in_vsync ,
+			output(0) => pixel_out_hsync ,
+			output(1) => pixel_out_vsync
 		);	
-		pixel_clock_out <= pixel_clock ;
+		pixel_out_clk <= pixel_in_clk ;
 		
 end RTL;
 

@@ -21,9 +21,9 @@
 			constant pclk_period : time := 40 ns ;
 			
 			signal clk, resetn : std_logic ;
-			signal pxclk, hsync, vsync : std_logic ;
-			signal pxclk_out, hsync_out, vsync_out : std_logic ;
-			signal pxclk_out_synced, hsync_out_synced, vsync_out_synced : std_logic ;
+			signal pxclk,pixel_in_hsync,pixel_in_vsync : std_logic ;
+			signal pxclk_out, pixel_out_hsync, pixel_out_vsync : std_logic ;
+			signal pxclk_out_synced, pixel_out_hsync_synced, pixel_out_vsync_synced : std_logic ;
 			signal new_block : std_logic ;
 			--signal block_out :  mat3 ;
 			signal block_out : matNM(0 to 2, 0 to 2) ;
@@ -33,39 +33,39 @@
          block3X3v3_0 :  block3X3_pixel_pipeline_sp 
 				port map(
 						resetn => resetn, 
-						pixel_clock => pxclk, 
-						hsync => hsync, 
-						vsync => vsync,
-						pixel_data_in => pixel, 
-						pixel_clock_out => pxclk_out, 
-						hsync_out => hsync_out, 
-						vsync_out => vsync_out,
+						pixel_in_clk => pxclk, 
+						hsync =>pixel_in_hsync, 
+						vsync =>pixel_in_vsync,
+						pixel_in_data => pixel, 
+						pixel_out_clk => pxclk_out, 
+						pixel_out_hsync => pixel_out_hsync, 
+						pixel_out_vsync => pixel_out_vsync,
 						block_out => block_out
 				);
 				
 --			sobel0 : sobel3x3_pixel_pipeline
 --				port map(
 --										resetn => resetn, 
---										pixel_clock => pxclk, 
---										hsync => hsync, 
---										vsync => vsync,
---										pixel_data_in => pixel, 
---										pixel_clock_out => pxclk_out, 
---										hsync_out => hsync_out, 
---										vsync_out => vsync_out,
---										pixel_data_out => pixel_out
+--										pixel_in_clk => pxclk, 
+--										hsync =>pixel_in_hsync, 
+--										vsync =>pixel_in_vsync,
+--										pixel_in_data => pixel, 
+--										pixel_out_clk => pxclk_out, 
+--										pixel_out_hsync => pixel_out_hsync, 
+--										pixel_out_vsync => pixel_out_vsync,
+--										pixel_out_data => pixel_out
 --				);
 --				hyst0 : hyst_threshold_pixel_pipeline
 --				port map(
 --										resetn => resetn, 
---										pixel_clock => pxclk, 
---										hsync => hsync, 
---										vsync => vsync,
---										pixel_data_in => pixel, 
---										pixel_clock_out => pxclk_out, 
---										hsync_out => hsync_out, 
---										vsync_out => vsync_out,
---										pixel_data_out => pixel_out
+--										pixel_in_clk => pxclk, 
+--										hsync =>pixel_in_hsync, 
+--										vsync =>pixel_in_vsync,
+--										pixel_in_data => pixel, 
+--										pixel_out_clk => pxclk_out, 
+--										pixel_out_hsync => pixel_out_hsync, 
+--										pixel_out_vsync => pixel_out_vsync,
+--										pixel_out_data => pixel_out
 --				);
 --				
 --				
@@ -74,11 +74,11 @@
 --				port map(
 --						clk_fast => clk, clk_slow => pxclk_out, resetn => resetn ,
 --						clk_slow_out => pxclk_out_synced ,
---						data_in(0) =>hsync_out,
---						data_in(1) =>vsync_out,
+--						data_in(0) =>pixel_out_hsync,
+--						data_in(1) =>pixel_out_vsync,
 --						data_in(9 downto 2) =>pixel_out,
---						data_out(0) =>hsync_out_synced,
---						data_out(1) =>vsync_out_synced,
+--						data_out(0) =>pixel_out_hsync_synced,
+--						data_out(1) =>pixel_out_vsync_synced,
 --						data_out(9 downto 2) =>pixel_out_synced
 --						);
 								
@@ -86,10 +86,10 @@
 --				port map(
 --						clk => clk ,
 --						resetn => resetn, 
---						pixel_clock => pxclk, 
---						hsync => hsync, 
---						vsync => vsync,
---						pixel_data_in => pixel, 
+--						pixel_in_clk => pxclk, 
+--						hsync =>pixel_in_hsync, 
+--						vsync =>pixel_in_vsync,
+--						pixel_in_data => pixel, 
 --						new_block => new_block ,
 --						block_out => block_out
 --				);
@@ -99,10 +99,10 @@
 --				port map(
 --						clk => clk ,
 --						resetn => resetn, 
---						pixel_clock => pxclk, 
---						hsync => hsync, 
---						vsync => vsync,
---						pixel_data_in => pixel, 
+--						pixel_in_clk => pxclk, 
+--						hsync =>pixel_in_hsync, 
+--						vsync =>pixel_in_vsync,
+--						pixel_in_data => pixel, 
 --						new_block => new_block ,
 --						block_out => block_out
 --				);

@@ -9,8 +9,8 @@ entity send_picture is
 	port(
  		clk : in std_logic; 
  		resetn : in std_logic; 
- 		pixel_clock, hsync, vsync : in std_logic; 
- 		pixel_data_in : in std_logic_vector(7 downto 0 ); 
+ 		pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+ 		pixel_in_data : in std_logic_vector(7 downto 0 ); 
  		data_out : out std_logic_vector(7 downto 0 ); 
 		output_ready : in std_logic;
  		send : out std_logic
@@ -50,20 +50,20 @@ architecture systemc of send_picture is
 		 	elsif  clk'event and clk = '1'  then
 		 		case state is
 		 			when wait_pixel =>  
-		 				if  pixel_clock = '1'  then --send pixel value
+		 				if  pixel_in_clk = '1'  then --send pixel value
 		 					select_end <= (others => '0') ; --end signal is pxclk falling edge
-							fifo_data_in <= pixel_data_in(7 downto 1) & (pixel_data_in(0) AND (NOT isControlChar));
+							fifo_data_in <= pixel_in_data(7 downto 1) & (pixel_in_data(0) AND (NOT isControlChar));
 		 					fifo_wr <= '1' ;
---							state <= write_data ; -- least significant bit can be modified if pixel value equals hsync or vsync char
+--							state <= write_data ; -- least significant bit can be modified if pixel value equalspixel_in_hsync orpixel_in_vsync char
 							state <= wait_sync ;
-						elsif  vsync = '1'  then
+						elsif pixel_in_vsync = '1'  then
 		 					fifo_data_in <= VSYNC_CHAR ; 
-		 					select_end <= "01" ; --end signal is pxclk vsync edge
+		 					select_end <= "01" ; --end signal is pxclkpixel_in_vsync edge
 		 					fifo_wr <= '1' ;
 --							state <= write_data ;
 							state <= wait_sync ;
-		 				elsif  hsync = '1'  then
-		 					fifo_data_in <= HSYNC_CHAR ; --end signal is hsync falling edge
+		 				elsif pixel_in_hsync = '1'  then
+		 					fifo_data_in <= HSYNC_CHAR ; --end signal ispixel_in_hsync falling edge
 		 					select_end <= "10" ; 
 		 					fifo_wr <= '1' ;
 --							state <= write_data ;
@@ -100,21 +100,21 @@ architecture systemc of send_picture is
 	--end process ;
 
 	-- end_sig_mux
-	process(pixel_clock, hsync, vsync, select_end)
+	process(pixel_in_clk,pixel_in_hsync,pixel_in_vsync, select_end)
 		 begin
 		 	if  conv_integer(select_end) = 1  then
-		 		end_sig <= NOT vsync ;
+		 		end_sig <= NOTpixel_in_vsync ;
 		 	elsif  conv_integer(select_end) = 2  then
-				end_sig <= vsync OR (NOT hsync);
+				end_sig <=pixel_in_vsync OR (NOTpixel_in_hsync);
 			elsif conv_integer(select_end) = 0 then
-				end_sig <= NOT pixel_clock ; 
+				end_sig <= NOT pixel_in_clk ; 
 			else 
-				end_sig <= NOT pixel_clock ;
+				end_sig <= NOT pixel_in_clk ;
 		 	end if ;
 		 end process;  
 
-isControlChar <= '1' when (pixel_data_in = "01010101") else -- equals VSYNC
-					  '1' when (pixel_data_in = "10101001") else -- equals HSYNC
+isControlChar <= '1' when (pixel_in_data = "01010101") else -- equals VSYNC
+					  '1' when (pixel_in_data = "10101001") else -- equals HSYNC
 					  '0';
 	
 fifo_rd <= '1' when output_ready = '1' and fifo_empty = '0' else

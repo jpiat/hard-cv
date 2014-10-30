@@ -45,12 +45,12 @@ ARCHITECTURE behavior OF blob_detection_tb IS
     PORT(
          clk : IN  std_logic;
          resetn : IN  std_logic;
-         pixel_clock : IN  std_logic;
-         hsync : IN  std_logic;
-         vsync : IN  std_logic;
-         pixel_data_in : IN  std_logic_vector(7 downto 0);
+         pixel_in_clk : IN  std_logic;
+        pixel_in_hsync : IN  std_logic;
+        pixel_in_vsync : IN  std_logic;
+         pixel_in_data : IN  std_logic_vector(7 downto 0);
 			blob_data : out std_logic_vector(7 downto 0);
-				--memory_interface to copy results on vsync
+				--memory_interface to copy results onpixel_in_vsync
 			mem_addr : out std_logic_vector(15 downto 0);
 			mem_data : inout std_logic_vector(15 downto 0);
 			mem_wr : out std_logic
@@ -61,7 +61,7 @@ ARCHITECTURE behavior OF blob_detection_tb IS
 	constant pclk_period : time := 40 ns ;
 	
 	signal clk, resetn : std_logic ;
-	signal pxclk, hsync, vsync, send_blob : std_logic ;
+	signal pxclk,pixel_in_hsync,pixel_in_vsync, send_blob : std_logic ;
 	signal pixel, blob_data : std_logic_vector(7 downto 0 ) := (others => '0');
 	signal px_count, line_count, byte_count : integer := 0 ;
  
@@ -73,10 +73,10 @@ BEGIN
 		PORT MAP (
           clk => clk,
           resetn => resetn,
-          pixel_clock => pxclk,
-          hsync => hsync,
-          vsync => vsync,
-          pixel_data_in => pixel,
+          pixel_in_clk => pxclk,
+         pixel_in_hsync =>pixel_in_hsync,
+         pixel_in_vsync =>pixel_in_vsync,
+          pixel_in_data => pixel,
 			 blob_data => blob_data
         );
 

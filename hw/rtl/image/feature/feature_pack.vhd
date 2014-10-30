@@ -31,9 +31,9 @@ generic(WIDTH: natural := 640;
 		port(
 			clk : in std_logic; 
 			resetn : in std_logic; 
-			pixel_clock, hsync, vsync : in std_logic; 
-			pixel_data_in : in std_logic_vector(7 downto 0 ); 
-			pixel_clock_out, hsync_out, vsync_out : out std_logic; 
+			pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+			pixel_in_data : in std_logic_vector(7 downto 0 ); 
+			pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic; 
 			descriptor :  out std_logic_vector((DESCRIPTOR_LENGTH - 1) downto 0) );
 end component;
 
@@ -71,8 +71,8 @@ generic(WIDTH: natural := 640;
 port(
  		clk : in std_logic; 
  		resetn : in std_logic; 
- 		pixel_clock, hsync, vsync : in std_logic; 
- 		pixel_data_in : in std_logic_vector(7 downto 0 );
+ 		pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+ 		pixel_in_data : in std_logic_vector(7 downto 0 );
 -- active search interface
 -- each lmk to track should be registered as
 --------16bit---------
@@ -108,9 +108,9 @@ generic(WIDTH : positive := 640 ; HEIGHT : positive := 480; WINDOW_SIZE : positi
 port (
 		clk : in std_logic; 
  		resetn : in std_logic; 
- 		pixel_clock, hsync, vsync : in std_logic; 
- 		pixel_clock_out, hsync_out, vsync_out : out std_logic; 
- 		pixel_data_in : in std_logic_vector(7 downto 0 ); 
+ 		pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+ 		pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic; 
+ 		pixel_in_data : in std_logic_vector(7 downto 0 ); 
  		harris_out : out std_logic_vector(15 downto 0 )
 );
 end component;
@@ -155,7 +155,7 @@ component HARRIS_TESSELATION is
 	port (
 			clk : in std_logic; 
 			resetn : in std_logic; 
-			pixel_clock, hsync, vsync : in std_logic; 
+			pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
 			feature_desc_in : in std_logic_vector(DESCRIPTOR_SIZE-1 downto 0);
 			harris_score_in : in std_logic_vector(15 downto 0 ); 
 			feature_coordx	:	out std_logic_vector(7 downto 0 ) ;

@@ -48,7 +48,7 @@ ARCHITECTURE behavior OF lcd_controller_tb IS
 	constant pclk_period : time := 150 ns ;
 	
 	signal clk, resetn : std_logic ;
-	signal pxclk, hsync, vsync : std_logic ;
+	signal pxclk,pixel_in_hsync,pixel_in_vsync : std_logic ;
 	signal pixel : std_logic_vector(7 downto 0 ) := (others => '0');
 	signal px_count, line_count, byte_count : integer := 0 ;
 	
@@ -61,7 +61,7 @@ BEGIN
  
 stimuli : graphic_generator 
 port map(clk => clk, resetn => resetn,
-	  pixel_clock_out => pxclk, hsync_out => hsync, vsync_out => vsync ,
+	  pixel_out_clk => pxclk, pixel_out_hsync =>pixel_in_hsync, pixel_out_vsync =>pixel_in_vsync ,
 	  pixel_r => pixel
 	  );
  
@@ -70,7 +70,7 @@ uut : lcd_controller
 port map(
  		clk => clk,
  		resetn => resetn,
- 		pixel_clock => pxclk, hsync => hsync, vsync => vsync, 
+ 		pixel_in_clk => pxclk,pixel_in_hsync =>pixel_in_hsync,pixel_in_vsync =>pixel_in_vsync, 
  		pixel_r => pixel, pixel_g => pixel, pixel_b => pixel,
 		lcd_rs => lcd_rs, lcd_cs => lcd_cs, lcd_rd => lcd_rd, lcd_wr => lcd_wr,
 	   lcd_data => lcd_data

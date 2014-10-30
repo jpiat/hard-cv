@@ -104,7 +104,7 @@ component lcd_controller is
 port(
  		clk : in std_logic; 
  		resetn : in std_logic; 
- 		pixel_clock, hsync, vsync : in std_logic; 
+ 		pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
  		pixel_r, pixel_g, pixel_b : in std_logic_vector(7 downto 0 );
 		lcd_rs, lcd_cs, lcd_rd, lcd_wr	:	 out std_logic;
 	   lcd_data	:	out std_logic_vector(15 downto 0) 
@@ -116,11 +116,11 @@ component yuv_camera_interface is
  		clock : in std_logic; 
  		resetn : in std_logic; 
  		pixel_data : in std_logic_vector(7 downto 0 ); 
- 		y_data : out std_logic_vector(7 downto 0 ); 
- 		u_data : out std_logic_vector(7 downto 0 ); 
- 		v_data : out std_logic_vector(7 downto 0 ); 
- 		pixel_clock_out, hsync_out, vsync_out : out std_logic; 
- 		pxclk, href, vsync : in std_logic
+ 		pixel_out_y_data : out std_logic_vector(7 downto 0 ); 
+ 		pixel_out_u_data : out std_logic_vector(7 downto 0 ); 
+ 		pixel_out_v_data : out std_logic_vector(7 downto 0 ); 
+ 		pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic; 
+ 		pclk, href,vsync : in std_logic
 	); 
 end component ;
 
@@ -131,13 +131,13 @@ component rgb565_camera_interface is
  		i2c_clk : in std_logic; 
  		resetn : in std_logic; 
  		pixel_data : in std_logic_vector(7 downto 0 ); 
- 		r_data : out std_logic_vector(7 downto 0 ); 
- 		g_data : out std_logic_vector(7 downto 0 ); 
- 		b_data : out std_logic_vector(7 downto 0 ); 
+ 		pixel_out_r_data : out std_logic_vector(7 downto 0 ); 
+ 		pixel_out_g_data : out std_logic_vector(7 downto 0 ); 
+ 		pixel_out_b_data : out std_logic_vector(7 downto 0 ); 
  		scl : inout std_logic; 
  		sda : inout std_logic; 
- 		pixel_clock_out, hsync_out, vsync_out : out std_logic; 
- 		pxclk, href, vsync : in std_logic
+ 		pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic; 
+ 		pxclk, href,vsync : in std_logic
 	); 
 end component ;
 

@@ -34,8 +34,8 @@ entity rgb2hsv is
 port( 
 		clk : in std_logic; 
  		resetn : in std_logic; 
- 		pixel_clock, hsync, vsync : in std_logic; 
- 		pixel_clock_out, hsync_out, vsync_out : out std_logic; 
+ 		pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+ 		pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic; 
  		pixel_r, pixel_g, pixel_b : in std_logic_vector(4 downto 0 ); 
  		pixel_h, pixel_s, pixel_v : out std_logic_vector(7 downto 0 )
 );

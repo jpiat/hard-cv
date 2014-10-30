@@ -54,12 +54,15 @@ begin
 		wr_ptr <= 0 ;
 		nb_available <= 0 ;
 	elsif clk'event and clk = '1' then
-		if push = '1' and full_t = '0' then
+		if push = '1' and pop = '1' then
+			wr_ptr <= (wr_ptr + 1) ;
+			rd_ptr <= (rd_ptr + 1) ;
+		elsif push = '1' and full_t = '0' then
 			wr_ptr <= (wr_ptr + 1) ;
 			fifo(wr_ptr) <= data_in ;
 			nb_available <= nb_available + 1 ;
 		elsif pop = '1' and empty_t = '0' then
-			rd_ptr <= rd_ptr + 1 ;
+			rd_ptr <= (rd_ptr + 1) ;
 			nb_available <= nb_available - 1 ;
 		end if ;
 	end if ;

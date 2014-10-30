@@ -33,8 +33,8 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 entity yuv_pixel2fifo is
 port(
 	clk, resetn, sreset : in std_logic ;
-	pixel_clock, hsync, vsync : in std_logic; 
-	pixel_y, pixel_u, pixel_v : in std_logic_vector(7 downto 0);
+	pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+	pixel_in_y_data, pixel_in_u_data, pixel_in_v_data : in std_logic_vector(7 downto 0);
 	fifo_data : out std_logic_vector(15 downto 0);
 	fifo_wr : out std_logic 
 
@@ -42,7 +42,7 @@ port(
 end yuv_pixel2fifo;
 
 architecture Behavioral of yuv_pixel2fifo is
-signal hsync_rising_edge, vsync_rising_edge, pxclk_rising_edge, hsync_old, vsync_old, pxclk_old: std_logic ;
+signal pixel_in_hsync_rising_edge,pixel_in_vsync_rising_edge, pxclk_rising_edge,pixel_in_hsync_old,pixel_in_vsync_old, pxclk_old: std_logic ;
 signal pixel_count :std_logic_vector(1 downto 0);
 signal write_pixel : std_logic ;
 signal enabled : std_logic ;
@@ -56,7 +56,7 @@ begin
 	elsif clk'event and clk = '1' then
 		if sreset = '1' then
 			enabled <= '0' ;
-		elsif vsync = '1' then
+		elsif pixel_in_vsync = '1' then
 			enabled <= '1' ;
 		end if ;
 	end if ;
@@ -65,32 +65,32 @@ end process ;
 process(clk, resetn)
 begin
 	if resetn = '0' then
-		vsync_old <= '0' ;
+		pixel_in_vsync_old <= '0' ;
 	elsif clk'event and clk = '1' then
-		vsync_old <= vsync ;
+		pixel_in_vsync_old <=pixel_in_vsync ;
 	end if ;
 end process ;
-vsync_rising_edge <= (NOT vsync_old) and vsync ;
+pixel_in_vsync_rising_edge <= (NOT pixel_in_vsync_old) and pixel_in_vsync ;
 
 process(clk, resetn)
 begin
 	if resetn = '0' then
-		hsync_old <= '0' ;
+		pixel_in_hsync_old <= '0' ;
 	elsif clk'event and clk = '1' then
-		hsync_old <= hsync ;
+		pixel_in_hsync_old <=pixel_in_hsync ;
 	end if ;
 end process ;
-hsync_rising_edge <= (NOT hsync_old) and hsync ;
+pixel_in_hsync_rising_edge <= (NOT pixel_in_hsync_old) and pixel_in_hsync ;
 
 process(clk, resetn)
 begin
 	if resetn = '0' then
 		pxclk_old <= '0' ;
 	elsif clk'event and clk = '1' then
-		pxclk_old <= pixel_clock ;
+		pxclk_old <= pixel_in_clk ;
 	end if ;
 end process ;
-pxclk_rising_edge <= (NOT pxclk_old) and pixel_clock ;
+pxclk_rising_edge <= (NOT pxclk_old) and pixel_in_clk ;
 
 
 process(clk, resetn)
@@ -98,20 +98,20 @@ begin
 	if resetn = '0' then
 		pixel_count <= (others => '0'); 
 	elsif clk'event and clk = '1' then
-		if hsync = '1' then
+		if pixel_in_hsync = '1' then
 			pixel_count <= (others => '0'); 
-		elsif pxclk_rising_edge = '1'  and hsync = '0' then
+		elsif pxclk_rising_edge = '1'  and pixel_in_hsync = '0' then
 			pixel_count <= pixel_count + 1 ;
 		end if ;
 	end if ;
 end process ;
 write_pixel <= pxclk_rising_edge;
 
-fifo_wr <= write_pixel when vsync = '0' and hsync = '0' and enabled = '1' else
-			  vsync_rising_edge ;
+fifo_wr <= write_pixel when pixel_in_vsync = '0' and pixel_in_hsync = '0' and enabled = '1' else
+			 pixel_in_vsync_rising_edge ;
 				
-fifo_data <= (pixel_v & pixel_y ) when pixel_count(0) = '0' and vsync = '0' else
-				 (pixel_u & pixel_y ) when pixel_count(0) = '1' and vsync = '0'  else
+fifo_data <= (pixel_in_v_data & pixel_in_y_data ) when pixel_count(0) = '0' and pixel_in_vsync = '0' else
+				 (pixel_in_u_data & pixel_in_y_data ) when pixel_count(0) = '1' and pixel_in_vsync = '0'  else
 				  X"55AA" ;
 end Behavioral;
 

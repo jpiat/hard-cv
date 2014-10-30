@@ -5,26 +5,25 @@ library IEEE;
 library work;
         use work.image_pack.all ;
 		  use work.utils_pack.all ;
-		  use work.conf_pack.all ;
 
 entity yuv_camera_interface is
 	port(
  		clock : in std_logic; 
  		resetn : in std_logic; 
  		pixel_data : in std_logic_vector(7 downto 0 ); 
- 		y_data : out std_logic_vector(7 downto 0 ); 
- 		u_data : out std_logic_vector(7 downto 0 ); 
- 		v_data : out std_logic_vector(7 downto 0 ); 
- 		pixel_clock_out, hsync_out, vsync_out : out std_logic; 
- 		pxclk, href, vsync : in std_logic
+ 		pixel_out_y_data : out std_logic_vector(7 downto 0 ); 
+ 		pixel_out_u_data : out std_logic_vector(7 downto 0 ); 
+ 		pixel_out_v_data : out std_logic_vector(7 downto 0 ); 
+ 		pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic; 
+ 		pclk, href,vsync : in std_logic
 	); 
 end yuv_camera_interface;
 
 architecture systemc of yuv_camera_interface is
 	
-	signal pxclk_old, pxclk_rising_edge, pxclk_falling_edge, nclk : std_logic ;
+	signal pclk_old, pclk_rising_edge, pclk_falling_edge, nclk : std_logic ;
 	signal en_ylatch, en_ulatch, en_vlatch, en_dec_uv : std_logic ;
-	signal hsynct, vsynct, pxclkt, pixel_clock_out_t  : std_logic ;
+	signal hsynct, vsynct, pclkt, pixel_clock_out_t  : std_logic ;
 	signal vsync_d, href_d : std_logic ;
 	signal y_data_a, y_data_b, y_data_c : std_logic_vector(7 downto 0);
 	signal u_data_a, u_data_b: std_logic_vector(7 downto 0);
@@ -40,7 +39,7 @@ architecture systemc of yuv_camera_interface is
 
 y_latch : generic_latch 
 	 generic map( NBIT => 8)
-    port map( clk =>pxclk,
+    port map( clk =>pclk,
            resetn => resetn ,
            sraz => '0' ,
            en => en_ylatch ,
@@ -49,7 +48,7 @@ y_latch : generic_latch
 			  
 y_latch_b : generic_latch 
 	 generic map( NBIT => 8)
-    port map( clk =>pxclk,
+    port map( clk =>pclk,
            resetn => resetn ,
            sraz => '0' ,
            en => en_ylatch ,
@@ -58,7 +57,7 @@ y_latch_b : generic_latch
 			  
 y_latch_c : generic_latch 
 	 generic map( NBIT => 8)
-    port map( clk =>pxclk,
+    port map( clk =>pclk,
            resetn => resetn ,
            sraz => '0' ,
            en => en_ylatch ,
@@ -67,7 +66,7 @@ y_latch_c : generic_latch
 			  
 u_latch : generic_latch 
 	 generic map( NBIT => 8)
-    port map( clk => pxclk,
+    port map( clk => pclk,
            resetn => resetn ,
            sraz => '0' ,
            en => en_ulatch ,
@@ -76,7 +75,7 @@ u_latch : generic_latch
 			  
 u_latch_b : generic_latch 
 	 generic map( NBIT => 8)
-    port map( clk => pxclk,
+    port map( clk => pclk,
            resetn => resetn ,
            sraz => '0' ,
            en => en_dec_uv ,
@@ -85,7 +84,7 @@ u_latch_b : generic_latch
 
 v_latch_a : generic_latch 
 	 generic map( NBIT => 8)
-    port map( clk => pxclk,
+    port map( clk => pclk,
            resetn => resetn ,
            sraz => '0' ,
            en => en_vlatch ,
@@ -94,7 +93,7 @@ v_latch_a : generic_latch
 			  
 v_latch_b : generic_latch 
 	 generic map( NBIT => 8)
-    port map( clk => pxclk,
+    port map( clk => pclk,
            resetn => resetn ,
            sraz => '0' ,
            en => en_dec_uv ,
@@ -104,7 +103,7 @@ v_latch_b : generic_latch
 	delay_sync : generic_delay
 		generic map( WIDTH => 2, DELAY => 3)
 		port map(
-			clk => pxclk, resetn => resetn,
+			clk => pclk, resetn => resetn,
 			input(0) => href ,
 			input(1) => vsync ,
 			output(0) => href_d,
@@ -116,29 +115,29 @@ v_latch_b : generic_latch
 			if resetn = '0' then
 				hsynct <= '0' ;
 				vsynct <= '0' ;
-				pxclkt <= '0' ;
-				y_data <= (others => '0') ; 
-				u_data <= (others => '0') ;
-				v_data <= (others => '0') ;
+				pclkt <= '0' ;
+				pixel_out_y_data <= (others => '0') ; 
+				pixel_out_u_data <= (others => '0') ;
+				pixel_out_v_data <= (others => '0') ;
 				pixel_clock_out_t <= '0' ;
 		 	elsif  clock'event and clock = '1'  then
 				hsynct <= NOT href_d ; -- changing href into hsync
 				vsynct <= vsync_d ;
-				pxclkt <= pxclk ;
+				pclkt <= pclk ;
 				if cpt_nb_pixel(0) = '1' then
-					y_data <= y_data_c ; 
-					u_data <= u_data_b ;
-					v_data <= v_data_b ;
+					pixel_out_y_data <= y_data_c ; 
+					pixel_out_u_data <= u_data_b ;
+					pixel_out_v_data <= v_data_b ;
 				end if ;
 				pixel_clock_out_t <= cpt_nb_pixel(0) ;
 			end if ;
 	end process ;
 	
-	process(pxclk, resetn)
+	process(pclk, resetn)
 		 begin
 			if resetn = '0' then
 				vsync_old <= '0' ;
-		 	elsif  pxclk'event and pxclk = '1'  then
+		 	elsif  pclk'event and pclk = '1'  then
 				vsync_old <= vsync ;
 			end if ;
 	end process ;
@@ -147,7 +146,7 @@ v_latch_b : generic_latch
 	 
 pixel_counter : simple_counter
 	 generic map(NBIT => 2)
-    port map( clk => pxclk, 
+    port map( clk => pclk, 
            resetn => resetn, 
            sraz => '0',
            en => '1',
@@ -175,8 +174,8 @@ pixel_counter : simple_counter
 
 
 	
-    hsync_out <= hsynct ;
-	 vsync_out <= vsynct ;
-	 pixel_clock_out <= pixel_clock_out_t ;
+    pixel_out_hsync <= hsynct ;
+	 pixel_out_vsync <= vsynct ;
+	 pixel_out_clk <= pixel_clock_out_t ;
 						  
 end systemc ;
