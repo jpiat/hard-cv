@@ -82,7 +82,7 @@ begin
 				raw_res => pixel_from_conv
 		);
 	
-		pixel_in_clk_en <= pixel_in_clk and (not pixel_in_hsync) ;
+		pixel_in_clk_en <= pixel_in_clk ;
 		delay_sync: generic_delay
 		generic map( WIDTH =>  3 , DELAY => 5)
 		port map(

@@ -23,7 +23,8 @@ use IEEE.NUMERIC_STD.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 library WORK ;
-USE WORK.CAMERA.ALL ;
+USE WORK.image_pack.ALL ;
+USE WORK.utils_pack.ALL ;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
@@ -53,9 +54,8 @@ end dilate3x3 ;
 
 
 architecture Behavioral of dilate3x3 is
-	signal block3x3_sig : mat3 ;
+	signal block3x3_sig : matNM(0 to 2, 0 to 2) ;
 	signal new_block : std_logic ;
-	for block0 : block3X3 use entity block3X3(RTL) ;
 begin
 
 		block0:  block3X3 
@@ -69,18 +69,18 @@ begin
 			block_out => block3x3_sig);
 		
 		inv0 : IF INVERT = 0 generate 
-			pixel_out_data <= VALUE when ((block3x3_sig(0)(1) = "011111111") OR (block3x3_sig(1)(0) = "011111111") 
-							OR (block3x3_sig(1)(1) = "011111111") 
-							OR (block3x3_sig(1)(2) = "011111111")  
-							OR (block3x3_sig(2)(1) = "011111111")) else
+			pixel_out_data <= VALUE when ((block3x3_sig(0,1) = "011111111") OR (block3x3_sig(1,0) = "011111111") 
+							OR (block3x3_sig(1,1) = "011111111") 
+							OR (block3x3_sig(1,2) = "011111111")  
+							OR (block3x3_sig(2,1) = "011111111")) else
 							(others => '0');
 		end generate inv0 ;
 		
 		ninv0 : IF INVERT = 1 generate 
-			pixel_out_data <= (others => '0') when ((block3x3_sig(0)(1) = "011111111") OR (block3x3_sig(1)(0) = "011111111") 
-							OR (block3x3_sig(1)(1) = "011111111") 
-							OR (block3x3_sig(1)(2) = "011111111")  
-							OR (block3x3_sig(2)(1) = "011111111")) else
+			pixel_out_data <= (others => '0') when ((block3x3_sig(0,1) = "011111111") OR (block3x3_sig(1,0) = "011111111") 
+							OR (block3x3_sig(1,1) = "011111111") 
+							OR (block3x3_sig(1,2) = "011111111")  
+							OR (block3x3_sig(2,1) = "011111111")) else
 							VALUE ;
 		end generate ninv0 ;
 		
