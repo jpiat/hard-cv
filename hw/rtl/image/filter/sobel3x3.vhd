@@ -113,7 +113,7 @@ begin
 				raw_res => raw_from_conv2
 		);
 		
-		pixel_in_clk_en <= pixel_in_clk and (not pixel_in_hsync) ;
+		pixel_in_clk_en <= pixel_in_clk;
 		delay_sync: generic_delay
 		generic map( WIDTH =>  3 , DELAY => 5)
 		port map(
@@ -229,7 +229,7 @@ begin
 		
 		pixel_in_clk_en <= pixel_in_clk ; --and (notpixel_in_hsync) ;
 		delay_sync: generic_delay
-		generic map( WIDTH =>  3 , DELAY => 5)
+		generic map( WIDTH =>  3 , DELAY => 6)
 		port map(
 			clk => clk, resetn => resetn ,
 			input(0) =>pixel_in_hsync ,
@@ -245,16 +245,19 @@ begin
 			if resetn = '0' then
 				raw_from_conv1_latched <= (others => '0') ;
 				raw_from_conv2_latched <= (others => '0') ;
+				sobel_response <= (others => '0');
+				x_grad  <= (others => '0');
+				y_grad  <= (others => '0');
 			elsif clk'event and clk = '1' then
 				raw_from_conv1_latched <= sum_x_step(2) ;
 				raw_from_conv2_latched <= sum_y_step(2) ;
+				sobel_response <= abs(raw_from_conv1_latched) + abs(raw_from_conv2_latched) ;
+				x_grad <= raw_from_conv1_latched ;
+				y_grad <= raw_from_conv2_latched ;
 			end if ;
 		end process ;
-		
-		sobel_response <= abs(raw_from_conv1_latched) + abs(raw_from_conv2_latched) ;
 		pixel_out_data <= std_logic_vector(sobel_response(10 downto 3));
-		x_grad <= raw_from_conv1_latched ;
-		y_grad <= raw_from_conv2_latched ;
+		
 		
 		
 end RTL;

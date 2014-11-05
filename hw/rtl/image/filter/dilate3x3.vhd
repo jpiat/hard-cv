@@ -94,7 +94,7 @@ begin
 			elsif clk'event and clk = '1' then
 				pixel_out_hsync <=pixel_in_hsync ;
 				pixel_out_vsync <=pixel_in_vsync ;
-				pixel_out_clk <= new_block ;
+				pixel_out_clk <= pixel_in_clk ;
 			end if ;
 		end process ;
 		

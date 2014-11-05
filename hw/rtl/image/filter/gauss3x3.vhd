@@ -160,7 +160,7 @@ begin
 			end if ;
 		end process;
 	
-		pixel_in_clk_en <= pixel_in_clk ;--and (notpixel_in_hsync) ;
+		pixel_in_clk_en <= pixel_in_clk ;
 		delay_sync: generic_delay
 		generic map( WIDTH =>  3 , DELAY => 5)
 		port map(

@@ -51,6 +51,7 @@ end hyst_threshold;
 architecture RTL of hyst_threshold is
 	signal block3x3_sig : matNM(0 to 2, 0 to 2) ;
 	signal pixel_in_clk_en, new_block : std_logic ;
+	signal pixel_out_data_d : std_logic_vector(7 downto 0 );
 begin
 
 		block0:  block3X3 
@@ -63,7 +64,7 @@ begin
 			new_block => new_block,
 			block_out => block3x3_sig);
 		
-		pixel_out_data <= X"FF" when block3x3_sig(1,1) > HIGH_THRESH else
+		pixel_out_data_d <= X"FF" when block3x3_sig(1,1) > HIGH_THRESH else
 								X"FF" when block3x3_sig(1,1) > LOW_THRESH and block3x3_sig(0,0) > HIGH_THRESH else
 								X"FF" when block3x3_sig(1,1) > LOW_THRESH and block3x3_sig(0,1) > HIGH_THRESH else			
 								X"FF" when block3x3_sig(1,1) > LOW_THRESH and block3x3_sig(0,2) > HIGH_THRESH else
@@ -78,7 +79,7 @@ begin
 								
 		pixel_in_clk_en <= pixel_in_clk;
 		delay_sync: generic_delay
-		generic map( WIDTH =>  3 , DELAY => 1)
+		generic map( WIDTH =>  3 , DELAY => 2)
 		port map(
 			clk => clk, resetn => resetn ,
 			input(0) =>pixel_in_hsync ,
@@ -87,7 +88,16 @@ begin
 			output(0) => pixel_out_hsync ,
 			output(1) => pixel_out_vsync,
 			output(2) => pixel_out_clk
-		);		
+		);	
+
+		process(clk, resetn)
+		begin
+			if resetn = '0' then
+				pixel_out_data <= (others => '0') ;
+			elsif clk'event and clk = '1' then
+				pixel_out_data <= pixel_out_data_d ;
+			end if ;
+		end process ;
 		
 		
 end RTL;
