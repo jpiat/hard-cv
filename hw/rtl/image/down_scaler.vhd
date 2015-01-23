@@ -179,7 +179,7 @@ architecture RTL of down_scaler is
 	line_ram_addr <= pixel_counter((nbit(SCALING_FACTOR)+NBIT_ADDR-1) downto nbit(SCALING_FACTOR)) when pixel_counter < INPUT_WIDTH else
 						  (others => '0');
 	
-	line_ram_we <= pxclk_re whenpixel_in_hsync = '0' and pixel_counter < INPUT_WIDTH else
+	line_ram_we <= pxclk_re when pixel_in_hsync = '0' and pixel_counter < INPUT_WIDTH else
 						'0' ;
 						
 	sum <= line_ram_data_out + pixel_in_data ;
@@ -191,7 +191,7 @@ architecture RTL of down_scaler is
 		if resetn = '0' then
 			pixel_counter <= (others => '0') ;
 		elsif clk'event and clk = '1' then
-			ifpixel_in_hsync_fe = '1' then
+			if pixel_in_hsync_fe = '1' then
 				pixel_counter <= (others => '0') ;
 			elsif pxclk_re = '1' then
 				pixel_counter <= pixel_counter + 1 ;
@@ -207,9 +207,9 @@ architecture RTL of down_scaler is
 		if resetn = '0' then
 			line_counter <= (others => '0') ;
 		elsif clk'event and clk = '1' then
-			ifpixel_in_vsync_re = '1' then
+			if pixel_in_vsync_re = '1' then
 				line_counter <= (others => '0') ;
-			elsifpixel_in_hsync_re = '1' then
+			elsif pixel_in_hsync_re = '1' then
 				line_counter <= line_counter + 1 ;
 			end if;
 		end if ;
@@ -231,9 +231,9 @@ architecture RTL of down_scaler is
 		end if ;
 	end process ;
 	pxclk_re <= (not pxclk_old) and  pixel_in_clk ;
-	hsync_re <= (notpixel_in_hsync_old) andpixel_in_hsync ;
+	hsync_re <= (not pixel_in_hsync_old) and pixel_in_hsync ;
 	hsync_fe <= (hsync_old) and (notpixel_in_hsync) ;
-	vsync_re <= (notpixel_in_vsync_old) andpixel_in_vsync ;
+	vsync_re <= (not pixel_in_vsync_old) and pixel_in_vsync ;
 	
 	
 	process(clk)
