@@ -144,7 +144,7 @@ hsync_counter : simple_counter
            Q =>pixel_in_hsync_count
 			  );
 
-pixel_value <= fifo_data(7 downto 0) when pixel_count(0) = '1' else
+pixel_value <= fifo_data(7 downto 0) when pixel_count(0) = '0' else
 					fifo_data(15 downto 8) ;
 
 end Behavioral;

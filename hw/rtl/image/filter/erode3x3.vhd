@@ -24,7 +24,6 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 library WORK ;
 USE work.image_pack.ALL ;
-USE WORK.utils_pack.ALL ;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
@@ -87,14 +86,17 @@ begin
 		end generate ninv0 ;
 	
 	
-	conv_latch0 : generic_latch 
-	 generic map(NBIT => 8)
-    Port map( clk => clk ,
-           resetn => resetn ,
-           sraz => '0' ,
-           en => new_block ,
-           d => result,
-           q => pixel_out_data );
+	process(clk, resetn)
+	begin
+		if resetn = '0' then
+			pixel_out_data <= (others => '0') ;
+		elsif clk'event and clk = '1' then
+			if new_block = '1' then
+				pixel_out_data <= result ;
+			end if ;
+		end if ;
+	end process ;
+	
 	
 		--sync signals latch
 		process(clk, resetn)

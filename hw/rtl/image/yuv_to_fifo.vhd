@@ -30,7 +30,7 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity yuv_pixel2fifo is
+entity yuv_to_fifo is
 port(
 	clk, resetn, sreset : in std_logic ;
 	pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
@@ -39,9 +39,9 @@ port(
 	fifo_wr : out std_logic 
 
 );
-end yuv_pixel2fifo;
+end yuv_to_fifo;
 
-architecture Behavioral of yuv_pixel2fifo is
+architecture Behavioral of yuv_to_fifo is
 signal pixel_in_hsync_rising_edge,pixel_in_vsync_rising_edge, pxclk_rising_edge,pixel_in_hsync_old,pixel_in_vsync_old, pxclk_old: std_logic ;
 signal pixel_count :std_logic_vector(1 downto 0);
 signal write_pixel : std_logic ;

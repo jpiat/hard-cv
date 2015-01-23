@@ -89,11 +89,18 @@ end component;
 component threshold is
 generic(INVERT : natural := 0; VALUE : std_logic_vector(7 downto 0) := X"FF");
 port( 
+		clk, resetn : in std_logic ;
+		pixel_in_clk, pixel_in_hsync, pixel_in_vsync : in std_logic ;
  		pixel_in_data : in std_logic_vector(7 downto 0) ;
-		threshold	:	in std_logic_vector(7 downto 0);
-		pixel_out_data : out std_logic_vector(7 downto 0) 
+		
+		pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic ;
+ 		pixel_out_data : out std_logic_vector(7 downto 0) ;
+		
+		threshold	:	in std_logic_vector(7 downto 0)
+
 );
 end component;
+
 
 component synced_binarization is
 port( clk	:	in std_logic ;
@@ -353,6 +360,19 @@ port(
 		mem_out : out std_logic_vector(15 downto 0);
 		mem_write_addr : out std_logic_vector(15 downto 0);
 		mem_write : out std_logic 
+);
+end component;
+
+component bin_to_fifo is
+generic(ADD_SYNC : boolean := false);
+port(
+	clk, resetn : in std_logic ;
+	sreset : in std_logic ;
+	pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
+	pixel_in_data : in std_logic_vector(7 downto 0);
+	fifo_data : out std_logic_vector(15 downto 0);
+	fifo_wr : out std_logic 
+
 );
 end component;
 

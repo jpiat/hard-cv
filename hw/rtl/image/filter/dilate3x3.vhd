@@ -24,7 +24,6 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 library WORK ;
 USE WORK.image_pack.ALL ;
-USE WORK.utils_pack.ALL ;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
@@ -56,6 +55,7 @@ end dilate3x3 ;
 architecture Behavioral of dilate3x3 is
 	signal block3x3_sig : matNM(0 to 2, 0 to 2) ;
 	signal new_block : std_logic ;
+	signal result : std_logic_vector(7 downto 0);
 begin
 
 		block0:  block3X3 
@@ -69,7 +69,7 @@ begin
 			block_out => block3x3_sig);
 		
 		inv0 : IF INVERT = 0 generate 
-			pixel_out_data <= VALUE when ((block3x3_sig(0,1) = "011111111") OR (block3x3_sig(1,0) = "011111111") 
+			result <= VALUE when ((block3x3_sig(0,1) = "011111111") OR (block3x3_sig(1,0) = "011111111") 
 							OR (block3x3_sig(1,1) = "011111111") 
 							OR (block3x3_sig(1,2) = "011111111")  
 							OR (block3x3_sig(2,1) = "011111111")) else
@@ -77,13 +77,24 @@ begin
 		end generate inv0 ;
 		
 		ninv0 : IF INVERT = 1 generate 
-			pixel_out_data <= (others => '0') when ((block3x3_sig(0,1) = "011111111") OR (block3x3_sig(1,0) = "011111111") 
+			result <= (others => '0') when ((block3x3_sig(0,1) = "011111111") OR (block3x3_sig(1,0) = "011111111") 
 							OR (block3x3_sig(1,1) = "011111111") 
 							OR (block3x3_sig(1,2) = "011111111")  
 							OR (block3x3_sig(2,1) = "011111111")) else
 							VALUE ;
 		end generate ninv0 ;
 		
+		process(clk, resetn)
+		begin
+			if resetn = '0' then
+				pixel_out_data <= (others => '0') ;
+			elsif clk'event and clk = '1' then
+				if new_block = '1' then
+					pixel_out_data <= result ;
+				end if ;
+			end if ;
+		end process ;
+	
 	
 		process(clk, resetn)
 		begin
