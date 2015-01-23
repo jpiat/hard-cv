@@ -154,7 +154,7 @@ architecture RTL of down_scaler is
 	signal modulo_counter : std_logic_vector(nbit(SCALING_FACTOR)-1 downto 0 ) ; 
 	signal line_counter : std_logic_vector(nbit(SCALING_FACTOR)-1 downto 0 ) ; 
 	signal pxclk_re,pixel_in_hsync_re,pixel_in_hsync_fe,vsync_re, pxclk_old,pixel_in_hsync_old,pixel_in_vsync_old : std_logic ;
-	signalpixel_in_hsync_t : std_logic ;
+	signal pixel_in_hsync_t : std_logic ;
 	signal pixel_out_t : std_logic_vector(7 downto 0);
 	begin
 	
