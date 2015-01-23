@@ -153,7 +153,7 @@ architecture RTL of down_scaler is
 	signal pixel_counter : std_logic_vector(nbit(INPUT_WIDTH)-1 downto 0 ) ; 
 	signal modulo_counter : std_logic_vector(nbit(SCALING_FACTOR)-1 downto 0 ) ; 
 	signal line_counter : std_logic_vector(nbit(SCALING_FACTOR)-1 downto 0 ) ; 
-	signal pxclk_re,pixel_in_hsync_re,pixel_in_hsync_fe,vsync_re, pxclk_old,pixel_in_hsync_old,pixel_in_vsync_old : std_logic ;
+	signal pxclk_re,pixel_in_hsync_re,pixel_in_hsync_fe,pixel_in_vsync_re, pxclk_old,pixel_in_hsync_old,pixel_in_vsync_old : std_logic ;
 	signal pixel_in_hsync_t : std_logic ;
 	signal pixel_out_t : std_logic_vector(7 downto 0);
 	begin
@@ -214,7 +214,7 @@ architecture RTL of down_scaler is
 			end if;
 		end if ;
 	end process ;
-	hsync_t <= '1' when line_counter < (SCALING_FACTOR - 1) else
+	pixel_in_hsync_t <= '1' when line_counter < (SCALING_FACTOR - 1) else
 				  '1' when pixel_counter > INPUT_WIDTH else
 				 pixel_in_hsync ;
 	
@@ -222,18 +222,18 @@ architecture RTL of down_scaler is
 	begin
 		if resetn = '0' then
 			pxclk_old <= '0' ;
-			hsync_old <= '0' ;
-			vsync_old <= '0' ;
+			pixel_in_hsync_old <= '0' ;
+			pixel_in_vsync_old <= '0' ;
 		elsif clk'event and clk = '1' then
 			pxclk_old  <= pixel_in_clk;
-			hsync_old <=pixel_in_hsync ;
-			vsync_old <=pixel_in_vsync ;
+			pixel_in_hsync_old <=pixel_in_hsync ;
+			pixel_in_vsync_old <=pixel_in_vsync ;
 		end if ;
 	end process ;
 	pxclk_re <= (not pxclk_old) and  pixel_in_clk ;
-	hsync_re <= (not pixel_in_hsync_old) and pixel_in_hsync ;
-	hsync_fe <= (hsync_old) and (notpixel_in_hsync) ;
-	vsync_re <= (not pixel_in_vsync_old) and pixel_in_vsync ;
+	pixel_in_hsync_re <= (not pixel_in_hsync_old) and pixel_in_hsync ;
+	pixel_in_hsync_fe <= (pixel_in_hsync_old) and (not pixel_in_hsync) ;
+	pixel_in_vsync_re <= (not pixel_in_vsync_old) and pixel_in_vsync ;
 	
 	
 	process(clk)
