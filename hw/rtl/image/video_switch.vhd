@@ -36,7 +36,7 @@ use work.utils_pack.all ;
 entity video_switch is
 generic(NB	:	positive := 2);
 port(pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic_vector(NB - 1 downto 0);
-	  pixel_data	:	in slv8_array(NB - 1 downto 0);
+	  pixel_in_data	:	in slv8_array(NB - 1 downto 0);
 	  pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic ;
 	  pixel_out_data	:	out std_logic_vector(7 downto 0);
 	  channel	:	in std_logic_vector(7 downto 0)
@@ -46,7 +46,7 @@ end video_switch;
 architecture Behavioral of video_switch is
 
 begin
-pixel_out_data <= pixel_data(conv_integer(channel));
+pixel_out_data <= pixel_in_data(conv_integer(channel));
 pixel_out_clk <= pixel_in_clk(conv_integer(channel));
 pixel_out_hsync <=pixel_in_hsync(conv_integer(channel));
 pixel_out_vsync <=pixel_in_vsync(conv_integer(channel));

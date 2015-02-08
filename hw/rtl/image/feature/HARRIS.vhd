@@ -111,8 +111,13 @@ begin
 			pixel_out_clk => pxclk_from_sobel, pixel_out_hsync => href_from_sobel, pixel_out_vsync =>pixel_in_vsync_from_sobel, 
 			pixel_in_data => pixel_from_gauss,  
 			pixel_out_data => pixel_from_sobel,
-			x_grad => xgrad ,
-			y_grad => ygrad
+			x_grad(15 downto 12) => open,
+			x_grad(11 downto 4) => xgrad ,
+			x_grad(3 downto 0) => open,
+			
+			y_grad(15 downto 12) => open,
+			y_grad(11 downto 4) => ygrad,
+			y_grad(3 downto 0) => open
 		);	
 	
 	
