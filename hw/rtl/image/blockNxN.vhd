@@ -102,7 +102,7 @@ end generate gen_mem_input_0;
  
 lpixel_data <= ( '0' & pixel_in_data) ;
 
-enable_lines_latches <= (NOTpixel_in_hsync and pixel_in_clk) ;
+enable_lines_latches <= (NOT pixel_in_hsync and pixel_in_clk) ;
 
 
 gen_line_latches : for I in 0 to (N - 1) generate
@@ -120,7 +120,7 @@ begin
 	end if ;
 end process ;
 pixel_in_clk_rising_edge <= ((NOT old_pixel_in_clk) AND pixel_in_clk) ;
-new_blockq <= pixel_in_clk_rising_edge whenpixel_in_hsync = '0' else
+new_blockq <= pixel_in_clk_rising_edge when pixel_in_hsync = '0' else
 				 '0' ;
 new_block <= new_blockq ;
 

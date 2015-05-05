@@ -71,7 +71,7 @@ architecture Behavioral of HARRIS_TESSELATION is
 	signal top_left_cornery : std_logic_vector((nbit(HEIGHT) - 1) downto 0);
 	signal ram_in, ram_out : std_logic_vector((32+ DESCRIPTOR_SIZE)-1 downto 0);
 	signal new_high_score : std_logic ;
-	signalpixel_in_hsync_old,pixel_in_hsync_fe,pixel_in_hsync_re : std_logic ;
+	signal pixel_in_hsync_old,pixel_in_hsync_fe,pixel_in_hsync_re : std_logic ;
 begin
 
 
@@ -81,15 +81,17 @@ begin
 	if resetn ='0' then
 		hsync_old <= '0' ;
 		block_xaddress_old <= (others => '0') ;
+		pixel_in_clk_old <= '0' ;
 	elsif clk'event and clk = '1' then
 		hsync_old <=pixel_in_hsync ;
 		block_xaddress_old <= block_xaddress ;
+		pixel_in_clk_old <= pixel_in_clk ;
 	end if ;
 end process ;
 hsync_fe <=pixel_in_hsync_old and (notpixel_in_hsync) ;
-hsync_re <= (NOTpixel_in_hsync_old) andpixel_in_hsync ;
+hsync_re <= (NOT pixel_in_hsync_old) and pixel_in_hsync ;
 
-
+pixel_in_clk_re <= (not pixel_in_clk_old) and pixel_in_clk ;
 			 
 
 ram_in((32+DESCRIPTOR_SIZE) - 1 downto 32) <=  		feature_desc_in ;
@@ -103,7 +105,7 @@ high_score_ypos <= std_logic_vector(RESIZE(unsigned(ram_out(15 downto 8)), nbit(
 
 
 -- score is out is highest score or new high score
-harris_score_out <= harris_score_in when signed(harris_score_in) > signed(highest_score) else	
+harris_score_out <= harris_score_in when unsigned(harris_score_in) > unsigned(highest_score) else	
 						  highest_score ;
 -- feature coord x, is high score pos in block + block coord 						  
 feature_coordx <= std_logic_vector(RESIZE(unsigned(high_score_xpos), 8)) ;
@@ -113,7 +115,7 @@ feature_coordy <= std_logic_vector(RESIZE(unsigned(high_score_ypos), 8)) ;
 -- new high score is latched if we enter new block or if current socre is higher than igher score
 new_high_score <= '1' when block_xaddress_old /= block_xaddress and block_ypos = 0	 else
 						'0' when ((unsigned(pixel_count) < IGNORE_STRIPES) OR (unsigned(line_count) < IGNORE_STRIPES)) else
-						'1' when signed(harris_score_in) > signed(highest_score) else				
+						'1' when unsigned(harris_score_in) > unsigned(highest_score) else				
 						'0' ;
 
 
@@ -153,11 +155,11 @@ pixel_counter0 : pixel_counter
 				block_xpos <= (others => '0') ;
 				top_left_cornerx <= (others => '0') ;
 			elsif clk'event and clk = '1' then
-				ifpixel_in_hsync = '1' then
+				if pixel_in_hsync = '1' then
 					block_xaddress <= (others => '0') ;
 					top_left_cornerx <= (others => '0') ;
 					block_xpos <= (others => '0') ;
-				elsif pixel_in_clk = '1'  then
+				elsif pixel_in_clk_re = '1'  then
 						if block_xpos = (WIDTH/TILE_NBX - 1) then
 							block_xaddress <= block_xaddress  + 1  ;
 							top_left_cornerx <= pixel_count ;
@@ -186,11 +188,11 @@ pixel_counter0 : pixel_counter
 				block_ypos <= (others => '0') ;
 				top_left_cornery <= (others => '0') ;
 			elsif clk'event and clk = '1' then
-				ifpixel_in_vsync = '1' then
+				if pixel_in_vsync = '1' then
 					block_yaddress <= (others => '0') ;
 					top_left_cornery <= (others => '0') ;
 					block_ypos <= (others => '0') ;
-				elsifpixel_in_hsync_re = '1' then
+				elsif pixel_in_hsync_re = '1' then
 					if  block_ypos = (HEIGHT/TILE_NBY - 1) then
 						block_yaddress <= block_yaddress  + 1  ;
 						top_left_cornery <= line_count ;

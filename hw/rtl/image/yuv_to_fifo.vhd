@@ -56,7 +56,7 @@ begin
 	elsif clk'event and clk = '1' then
 		if sreset = '1' then
 			enabled <= '0' ;
-		elsif pixel_in_vsync = '1' then
+		elsif pixel_in_vsync_rising_edge = '1' then
 			enabled <= '1' ;
 		end if ;
 	end if ;
@@ -75,16 +75,6 @@ pixel_in_vsync_rising_edge <= (NOT pixel_in_vsync_old) and pixel_in_vsync ;
 process(clk, resetn)
 begin
 	if resetn = '0' then
-		pixel_in_hsync_old <= '0' ;
-	elsif clk'event and clk = '1' then
-		pixel_in_hsync_old <=pixel_in_hsync ;
-	end if ;
-end process ;
-pixel_in_hsync_rising_edge <= (NOT pixel_in_hsync_old) and pixel_in_hsync ;
-
-process(clk, resetn)
-begin
-	if resetn = '0' then
 		pxclk_old <= '0' ;
 	elsif clk'event and clk = '1' then
 		pxclk_old <= pixel_in_clk ;
@@ -98,7 +88,7 @@ begin
 	if resetn = '0' then
 		pixel_count <= (others => '0'); 
 	elsif clk'event and clk = '1' then
-		if pixel_in_hsync = '1' then
+		if pixel_in_hsync = '1' or sreset = '1' then
 			pixel_count <= (others => '0'); 
 		elsif pxclk_rising_edge = '1'  and pixel_in_hsync = '0' then
 			pixel_count <= pixel_count + 1 ;
@@ -108,7 +98,8 @@ end process ;
 write_pixel <= pxclk_rising_edge;
 
 fifo_wr <= write_pixel when pixel_in_vsync = '0' and pixel_in_hsync = '0' and enabled = '1' else
-			 pixel_in_vsync_rising_edge ;
+			 pixel_in_vsync_rising_edge when sreset = '0' else
+			 '0';
 				
 fifo_data <= (pixel_in_v_data & pixel_in_y_data ) when pixel_count(0) = '0' and pixel_in_vsync = '0' else
 				 (pixel_in_u_data & pixel_in_y_data ) when pixel_count(0) = '1' and pixel_in_vsync = '0'  else

@@ -80,7 +80,7 @@ architecture Behavioral of HARRIS_FINAL is
 	
 
 	
-	signalpixel_in_hsync_delayed,pixel_in_vsync_delayed : std_logic ;
+	signal pixel_in_hsync_delayed,pixel_in_vsync_delayed : std_logic ;
 	
 	for all : sobel3x3 use entity work.sobel3x3(RTL) ;
 	for all : gauss3x3 use entity work.gauss3x3(RTL) ;
