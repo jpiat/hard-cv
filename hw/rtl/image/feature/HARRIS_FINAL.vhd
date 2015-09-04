@@ -114,6 +114,8 @@ begin
 --			x_grad => xgrad ,
 --			y_grad => ygrad
 --		);	
+
+   -- sobel is used to compuet gradient in Harris response Ix and Iy
 	sobel0: sobel3x3
 		generic map(
 		  WIDTH => WIDTH,
@@ -131,10 +133,15 @@ begin
 	
 	
 	
-	xgrad_square <= xgrad * xgrad ;
-	ygrad_square <= ygrad * ygrad ;
-	xygrad <= xgrad * ygrad ;
+	xgrad_square <= xgrad * xgrad ; -- Ix²
+	ygrad_square <= ygrad * ygrad ; -- Iy²
+	xygrad <= xgrad * ygrad ; -- IxIy
 	
+	
+	-- Here start suming over the Harris window
+	
+	-- This component takes the Ix², Iy², IxIy and store them to have them available
+	-- to compute summing over the window
 	gen_square_acc:  HARRIS_LINE_ACC_SMALL
 		generic map(NB_LINE => (WINDOW_SIZE - 1), WIDTH => 320) 
 		port map(clk => clk, resetn => resetn,
@@ -154,6 +161,7 @@ begin
 			end if ;
 	end process ;
 	
+	-- this component adds the Ix for a window line
 	add_lines_gradx : HARRIS_16SADDER -- latency NB_LINE
 		generic map(NB_VAL => WINDOW_SIZE)
 		port map(
@@ -162,7 +170,7 @@ begin
 				result => gradx_square_sum_line
 		);
 
-
+	-- this component adds the Iy for a window line
 	add_lines_grady : HARRIS_16SADDER  -- latency NB_LINE
 		generic map(NB_VAL => WINDOW_SIZE)
 		port map(
@@ -170,7 +178,7 @@ begin
 				val_array => grady_square_lines ,
 				result => grady_square_sum_line
 		);
-		
+	-- this component adds the IxIy for a window line
 	add_lines_gradxy : HARRIS_16SADDER  -- latency NB_LINE
 		generic map(NB_VAL => WINDOW_SIZE)
 		port map(
@@ -250,6 +258,7 @@ begin
 		end generate ;
 	
 	
+	-- This component sums the window columns for Ix (using the sum over the line)
 	add_cols_gradx : HARRIS_16SADDER -- latency NB_LINE
 		generic map(NB_VAL => WINDOW_SIZE)
 		port map(
@@ -258,6 +267,7 @@ begin
 				result => xgrad_square_sum
 		);
 
+	-- This component sums the window columns for Iy (using the sum over the line)
 	add_cols_grady : HARRIS_16SADDER  -- latency NB_LINE
 		generic map(NB_VAL => WINDOW_SIZE)
 		port map(
@@ -265,7 +275,8 @@ begin
 				val_array => grady_square_sum_col,
 				result => ygrad_square_sum
 		);
-		
+	
+	-- This component sums the window columns for IxIy (using the sum over the line)
 	add_cols_gradxy : HARRIS_16SADDER  -- latency NB_LINE
 		generic map(NB_VAL => WINDOW_SIZE)
 		port map(
@@ -297,11 +308,15 @@ begin
 		pxclk_from_sobel_re <= pxclk_from_sobel AND (NOT pxclk_from_sobel_old);
 		href_from_sobel_re <= href_from_sobel AND (NOT href_from_sobel_old);	
 		
+		
+		-- Summing is divided to remain on 16-bits
 		xgrad_square_sum_divn <= SHIFT_RIGHT(xgrad_square_sum, DS_FACTOR) ;
 		ygrad_square_sum_divn <= SHIFT_RIGHT(ygrad_square_sum, DS_FACTOR) ;
 		xygrad_sum_divn <= SHIFT_RIGHT(xygrad_sum, DS_FACTOR);
 		
 		
+		-- Harris response is computed using equation
+		-- det(A)+ k*trace(A)²
 		harris_rep0: HARRIS_RESPONSE 
 		port map(
 				clk => clk, resetn => resetn,

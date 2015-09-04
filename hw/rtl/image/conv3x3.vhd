@@ -56,7 +56,7 @@ end conv3x3;
 architecture RTL of conv3x3 is
 
 
-signal sraz_mac : std_logic ;
+signal reset_mac : std_logic ;
 signal MAC0_A, MAC0_B, MAC1_A, MAC1_B, MAC2_A, MAC2_B	:	signed(15 downto 0);
 signal MAC0_RES, MAC1_RES, MAC2_RES:	signed(31 downto 0);
 
@@ -121,28 +121,25 @@ end process ;
 
 final_res <= MAC0_RES + MAC1_RES + MAC2_RES ;
 
-sraz_mac <= (NOT resetn) ;
+reset_mac <= (NOT resetn) OR new_block_rising_edge;
 
 mac0: MAC16
-port map(clk => clk, sraz => sraz_mac,
+port map(clk => clk, reset => reset_mac,
 	  add_subb	=> '1' ,
-	  reset_acc => new_block_rising_edge,
 	  A => MAC0_A, B => MAC0_B,
 	  RES => MAC0_RES 
 );
 
 mac1: MAC16
-port map(clk => clk, sraz => sraz_mac,
+port map(clk => clk, reset => reset_mac,
 	  add_subb	=> '1' ,
-	  reset_acc => new_block_rising_edge,
 	  A => MAC1_A, B => MAC1_B,
 	  RES => MAC1_RES 
 );
 
 mac2: MAC16
-port map(clk => clk, sraz => sraz_mac,
+port map(clk => clk, reset => reset_mac,
 	  add_subb	=> '1' ,
-	  reset_acc => new_block_rising_edge,
 	  A => MAC2_A, B => MAC2_B,
 	  RES => MAC2_RES 
 );
@@ -216,7 +213,7 @@ end RTL;
 --
 --signal convolution_state : compute_state ;
 --
---signal sraz_mac : std_logic ;
+--signal reset_mac : std_logic ;
 --signal MAC1_A, MAC1_B, MAC2_A, MAC2_B	:	signed(15 downto 0);
 --signal MAC1_RES, MAC2_RES:	signed(31 downto 0);
 --
@@ -228,13 +225,13 @@ end RTL;
 --
 --is_power_of_two0 : IF IS_POWER_OF_TWO = 1 GENERATE
 --	mac1: SAC16
---	port map(clk => clk, sraz => sraz_mac,
+--	port map(clk => clk, sraz => reset_mac,
 --	  A => MAC1_A, B => MAC1_B,
 --	  RES => MAC1_RES 
 --	);
 --
 --	mac2: SAC16
---	port map(clk => clk, sraz => sraz_mac, 
+--	port map(clk => clk, sraz => reset_mac, 
 --		  A => MAC2_A, B => MAC2_B,
 --		  RES => MAC2_RES 
 --	);
@@ -242,7 +239,7 @@ end RTL;
 --
 --is_power_of_two1 : IF IS_POWER_OF_TWO = 0 GENERATE
 --mac1: MAC16
---port map(clk => clk, sraz => sraz_mac,
+--port map(clk => clk, sraz => reset_mac,
 --	  add_subb	=> '1' ,
 --	  reset_acc => '0',
 --	  A => MAC1_A, B => MAC1_B,
@@ -250,7 +247,7 @@ end RTL;
 --);
 --
 --mac2: MAC16
---port map(clk => clk, sraz => sraz_mac,
+--port map(clk => clk, sraz => reset_mac,
 --	  add_subb	=> '1' ,
 --	  reset_acc => '0',
 --	  A => MAC2_A, B => MAC2_B,
@@ -262,21 +259,21 @@ end RTL;
 --process(clk, resetn)
 --begin
 --if resetn = '0' then 
---	sraz_mac <= '1' ;
+--	reset_mac <= '1' ;
 --	new_conv <= '0' ;
 --	busy <= '0' ;
 --	index <= (others => '0') ;
 --elsif clk'event and clk = '1'  then
 --	case convolution_state is
 --		when WAIT_PIXEL =>
---			sraz_mac <= '1' ;
+--			reset_mac <= '1' ;
 --			new_conv <= '0' ;
 --			busy <= '0' ;
 --			index <= (others => '0') ;
 --			if new_block = '1'  then
 --				new_conv <= '0' ;
 --				busy <= '1' ;
---				sraz_mac <= '0' ;
+--				reset_mac <= '0' ;
 --				MAC1_A(8 downto 0) <= block3x3(NON_ZERO(conv_integer(index))(0))(NON_ZERO(conv_integer(index))(1)) ;
 --				MAC1_B <= to_signed(KERNEL(NON_ZERO(conv_integer(index))(0))(NON_ZERO(conv_integer(index))(1)), 16) ;
 --				if NON_ZERO(conv_integer(index+1))(0) < 3 then
@@ -294,7 +291,7 @@ end RTL;
 --			busy <= '1' ;
 --			new_conv <= '0' ;
 --			if NON_ZERO(conv_integer(index))(0) < 3 then
---				sraz_mac <= '0' ;
+--				reset_mac <= '0' ;
 --				MAC1_A(8 downto 0) <= block3x3(NON_ZERO(conv_integer(index))(0))(NON_ZERO(conv_integer(index))(1)) ;
 --				MAC1_B <= to_signed(KERNEL(NON_ZERO(conv_integer(index))(0))(NON_ZERO(conv_integer(index))(1)), 16) ;
 --				if NON_ZERO(conv_integer(index+1))(0) < 3 then
