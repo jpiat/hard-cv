@@ -31,8 +31,8 @@ use IEEE.NUMERIC_STD.ALL;
 --use UNISIM.VComponents.all;
 
 entity MAC16 is
-port(clk, sraz : in std_logic;
-	  add_subb, reset_acc	:	in std_logic;
+port(clk, reset : in std_logic;
+	  add_subb	:	in std_logic;
 	  A, B	:	in signed(15 downto 0);
 	  RES	:	out signed(31 downto 0)  
 );
@@ -44,13 +44,11 @@ begin
     process (clk)
     begin
         if (clk'event and clk='1') then
-            if (sraz  = '1') then
+            if (reset  = '1') then
                 accum <= (others => '0');
                 mult <= (others => '0');
             else
-					 if reset_acc = '1' then
-						accum <= (others => '0');
-					 elsif add_subb = '1' then
+					 if add_subb = '1' then
 						accum <= accum + mult;
 					 else
 						accum <= accum - mult;

@@ -52,8 +52,8 @@ ARCHITECTURE behavior OF HARRIS_tb IS
    signal clk : std_logic := '0';
    signal resetn : std_logic := '0';
    signal pixel_in_clk : std_logic := '0';
-   signalpixel_in_hsync : std_logic := '0';
-   signalpixel_in_vsync : std_logic := '0';
+   signal pixel_in_hsync : std_logic := '0';
+   signal pixel_in_vsync : std_logic := '0';
    signal pixel_in_data : std_logic_vector(7 downto 0) := (others => '0');
 
  	--Outputs

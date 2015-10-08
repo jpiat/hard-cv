@@ -57,7 +57,7 @@ begin
 		if resetn = '0' then
 			vsync_old <= '0' ;
 		elsif pixel_in_clk'event and pixel_in_clk = '1' then 
-			ifpixel_in_vsync_fe = '1' and NOT isInitialized then
+			if pixel_in_vsync_fe = '1' and NOT isInitialized then
 				write(vDataoutline, string'("P2"));
 				writeline (pgmfile, vDataoutline);
 				write(vDataoutline, string'("#create from PGM writer"));
@@ -69,7 +69,7 @@ begin
 				write(vDataoutline, string'("255"));
 				writeline (pgmfile, vDataoutline);
 				isInitialized := TRUE ;
-			elsifpixel_in_hsync = '0' and isInitialized then 
+			elsif pixel_in_hsync = '0' and isInitialized then 
 				 if signed(value_in) > 0 then
 					if signed(value_in) > 255 then
 						vDataout := 255; 

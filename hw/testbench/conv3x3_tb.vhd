@@ -31,9 +31,7 @@ USE ieee.numeric_std.ALL;
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --USE ieee.numeric_std.ALL;
-library WORK;
-use WORK.CAMERA.ALL;
-use WORK.generic_components.ALL;
+
  
  
  
@@ -43,7 +41,26 @@ END conv3x3_tb;
 ARCHITECTURE behavior OF conv3x3_tb IS 
  
     -- Component Declaration for the Unit Under Test (UUT)
-	
+	component conv3x3 is
+	generic(KERNEL : imatNM(0 to 2, 0 to 2) := ((1, 2, 1),(0, 0, 0),(-1, -2, -1));
+		  NON_ZERO	: index_array := ((0, 0), (0, 1), (0, 2), (2, 0), (2, 1), (2, 2), (3, 3), (3, 3), (3, 3) ); -- (3, 3) indicate end  of non zero values
+		  IS_POWER_OF_TWO : natural := 0 -- (3, 3) indicate end  of non zero values
+		  );
+	port(
+		clk : in std_logic; 
+		resetn : in std_logic; 
+		new_block : in std_logic ;
+		block3x3 : in matNM(0 to 2, 0 to 2);
+		new_conv : out std_logic ;
+		busy : out std_logic ;
+		abs_res : out std_logic_vector(7 downto 0 );
+		raw_res : out signed(15 downto 0 )
+	);
+	end component;
+	 
+	 
+	 
+	type test_vect_3x3_type is array(0 to 2) of mat3 ;
 	
 
    --Inputs
@@ -51,12 +68,27 @@ ARCHITECTURE behavior OF conv3x3_tb IS
    signal resetn : std_logic := '0';
    signal new_block : std_logic := '0';
    signal block3x3 : mat3;
+	
 
  	--Outputs
    signal new_conv : std_logic;
    signal busy : std_logic;
    signal abs_res : std_logic_vector(7 downto 0);
    signal raw_res : signed(15 downto 0);
+
+	signal test_vec : test_vect_3x3_type := 
+	((( to_signed(1, 9), to_signed(1, 9), to_signed(1, 9)), 
+	(to_signed(1, 9), to_signed(1, 9), to_signed(1, 9)), 
+	(to_signed(1, 9), to_signed(1, 9), to_signed(1, 9))),
+	
+	(( to_signed(1, 9), to_signed(1, 9), to_signed(1, 9)), 
+	(to_signed(1, 9), to_signed(1, 9), to_signed(1, 9)), 
+	(to_signed(1, 9), to_signed(1, 9), to_signed(1, 9))),
+	
+	(( to_signed(1, 9), to_signed(1, 9), to_signed(1, 9)), 
+	(to_signed(1, 9), to_signed(1, 9), to_signed(1, 9)), 
+	(to_signed(1, 9), to_signed(1, 9), to_signed(1, 9)))
+	);
 
    -- Clock period definitions
    constant clk_period : time := 10 ns;
@@ -68,7 +100,12 @@ BEGIN
 										(to_signed(1, 9), to_signed(1, 9), to_signed(1, 9)));
  
 	-- Instantiate the Unit Under Test (UUT)
-   uut: conv3x3 PORT MAP (
+   uut: conv3x3 
+	generic map(KERNEL =>((1, 2, 1),(0, 0, 0),(-1, -2, -1)),
+		  NON_ZERO	=> ((0, 0), (0, 1), (0, 2), (2, 0), (2, 1), (2, 2), (3, 3), (3, 3), (3, 3) ), -- (3, 3) indicate end  of non zero values
+		  IS_POWER_OF_TWO => 0
+		  )
+	PORT MAP (
           clk => clk,
           resetn => resetn,
           new_block => new_block,
@@ -96,12 +133,14 @@ BEGIN
       wait for 100 ns;	
 		resetn <= '1' ;
       wait for clk_period*5;
-		new_block <= '1' ;
-		wait for clk_period;
-		new_block <= '0' ;
-		wait for clk_period*5;
+		for i in 0 to 2 loop
+			new_block <= '1' ;
+			block3x3 <= test_vec(i);
+			wait for clk_period;
+			new_block <= '0' ;
+			wait until new_conv = '1' ;
+		end loop ;
       -- insert stimulus here 
-
       wait;
    end process;
 

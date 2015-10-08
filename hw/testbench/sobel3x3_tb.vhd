@@ -8,10 +8,10 @@
   LIBRARY work ;
   use work.camera.all ;
 
-  ENTITY testbench IS
-  END testbench;
+  ENTITY sobel3x3_tb IS
+  END sobel3x3_tb;
 
-  ARCHITECTURE behavior OF testbench IS 
+  ARCHITECTURE behavior OF sobel3x3_tb IS 
 
   -- Component Declaration
 			component block3X3v3 is
