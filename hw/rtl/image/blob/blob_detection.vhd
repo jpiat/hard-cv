@@ -55,21 +55,17 @@ end blob_detection;
 
 architecture Behavioral of blob_detection is
 
-
-type blob_states is (WAIT_VSYNC, WAIT_HSYNC, WAIT_PIXEL, COMPARE_PIXEL, ADD_TO_BLOB, ADD_NEW_BLOB, END_PIXEL) ;
-
-signal blob_state0 : blob_states ;
 signal pixel_x, pixel_y : std_logic_vector(9 downto 0);
-signalpixel_in_hsync_old: std_logic := '0';
+signal pixel_in_hsync_old: std_logic := '0';
 signal sraz_neighbours, sraz_blobs : std_logic ;
 signal neighbours0 : pix_neighbours;
 signal new_line, add_neighbour, add_pixel, merge_blob, new_blob, oe_blob : std_logic ;
-signal current_pixel : std_logic_vector(7 downto 0) ;
-signal new_blob_index, current_blob, blob_index_to_merge, true_blob_index : unsigned(7 downto 0) ;
+signal current_pixel, current_blob : std_logic_vector(7 downto 0) ;
+signal new_blob_index, blob_index_to_merge, true_blob_index : std_logic_vector(7 downto 0) ;
 signal has_neighbour : std_logic ;
 signal is_blob_pixel : std_logic ;
 signal pixel_in_clk_old, pixel_in_clk_re : std_logic ;
-signalpixel_in_vsync_fe,pixel_in_vsync_re,pixel_in_vsync_old : std_logic ;
+signal pixel_in_vsync_fe,pixel_in_vsync_re,pixel_in_vsync_old : std_logic ;
 signal blob_class : std_logic_vector(7 downto 0) ;
 begin
 
@@ -79,7 +75,7 @@ sraz_blobs <=pixel_in_vsync_fe ;
 blobs0: blob_manager 
 	generic map(NB_BLOB => 32)
 	port map(
-	clk => clk, resetn => resetn, sraz => sraz_blobs,
+		clk => clk, resetn => resetn,
 		blob_class => blob_class ,
 		blob_index => current_blob,
 		next_blob_index => new_blob_index,
@@ -87,7 +83,7 @@ blobs0: blob_manager
 		merge_blob => merge_blob,
 		new_blob => new_blob, 
 		add_pixel => add_pixel,
-		pixel_posx => unsigned(pixel_x), pixel_posy => unsigned(pixel_y),
+		pixel_posx => pixel_x, pixel_posy => pixel_y,
 		
 		send_blobs =>pixel_in_vsync_re,
 		--memory_interface to copy results onpixel_in_vsync
@@ -103,14 +99,15 @@ update_neighbours : neighbours
 			resetn => resetn , sraz => sraz_neighbours, 
 			pixel_in_clk => pixel_in_clk,pixel_in_hsync =>pixel_in_hsync, 
         pixel_in_vsync =>pixel_in_vsync,			
-			neighbour_in => current_blob,
+			pixel_in_data => current_blob,
 			neighbours => neighbours0);
 			
 pixel_counter0: pixel_counter
 		port map(
 			clk => clk,
 			resetn => resetn, 
-			pixel_in_clk => pixel_in_clk,pixel_in_hsync =>pixel_in_hsync,
+			pixel_in_clk => pixel_in_clk,
+			pixel_in_hsync =>pixel_in_hsync,
 			pixel_count => pixel_x
 			);
 			
@@ -119,7 +116,8 @@ line_counter0: line_counter
 		port map(
 			clk => clk,
 			resetn => resetn, 
-			hsync =>pixel_in_hsync,pixel_in_vsync =>pixel_in_vsync, 
+			pixel_in_hsync =>pixel_in_hsync,
+			pixel_in_vsync =>pixel_in_vsync, 
 			line_count => pixel_y(8 downto 0)
 			);
 pixel_y(9) <= '0' ;
@@ -133,7 +131,9 @@ current_blob <= neighbours0(3) when is_blob_pixel='1' and neighbours0(3) /= 0 el
 
 has_neighbour <= '1' when (neighbours0(3) /= 0) or (neighbours0(2) /= 0) or (neighbours0(1) /= 0) or (neighbours0(0) /= 0) else
 						'0' ;
-is_blob_pixel <= 	'1' when pixel_in_data /= x"00" andpixel_in_hsync = '0' else
+
+sraz_neighbours <= pixel_in_vsync_re ;
+is_blob_pixel <= 	'1' when pixel_in_data /= x"00" and pixel_in_hsync = '0' else
 						'0';
 blob_class <= 	pixel_in_data ;				
 
@@ -142,7 +142,7 @@ new_blob <= pixel_in_clk_re when is_blob_pixel = '1' and has_neighbour = '0' els
 add_pixel <= pixel_in_clk_re when is_blob_pixel='1' and has_neighbour /= '0' else
 				 '0' ;
 					 
-add_neighbour <= pixel_in_clk whenpixel_in_hsync = '0' else
+add_neighbour <= pixel_in_clk when pixel_in_hsync = '0' else
 					  '0' ;
 merge_blob <= pixel_in_clk_re when neighbours0(0) /= 0 and neighbours0(2) /= 0 and neighbours0(0) /= neighbours0(2) and is_blob_pixel='1' else
 				  pixel_in_clk_re when neighbours0(3) /= 0 and neighbours0(2) /= 0 and neighbours0(3) /= neighbours0(2) and is_blob_pixel='1' else
@@ -155,15 +155,15 @@ process(clk, resetn)
 begin
 	if resetn = '0' then
 		pixel_in_clk_old <= '0' ;
-		vsync_old <= '0' ;
+		pixel_in_vsync_old <= '0' ;
 	elsif clk'event and clk = '1' then
 		pixel_in_clk_old <= pixel_in_clk ;
-		vsync_old <=pixel_in_vsync ;
+		pixel_in_vsync_old <=pixel_in_vsync ;
 	end if ;
 end process ;
 pixel_in_clk_re <= (NOT pixel_in_clk_old) and pixel_in_clk ;
-vsync_fe <=pixel_in_vsync_old and (NOTpixel_in_vsync) ;
-vsync_re <= (NOTpixel_in_vsync_old) andpixel_in_vsync ;
+pixel_in_vsync_fe <= pixel_in_vsync_old and (NOT pixel_in_vsync) ;
+pixel_in_vsync_re <= (NOT pixel_in_vsync_old) and pixel_in_vsync ;
 
 end Behavioral;
 

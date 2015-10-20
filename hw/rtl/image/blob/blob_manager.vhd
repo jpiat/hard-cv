@@ -39,15 +39,15 @@ use work.primitive_pack.all ;
 entity blob_manager is
 generic(NB_BLOB : positive := 32);
 	port(
-		clk, resetn, sraz : in std_logic ; --standard signals
+		clk, resetn : in std_logic ; --standard signals
 		blob_class : in std_logic_vector(7 downto 0);
-		blob_index : in unsigned(7 downto 0); -- input blob_index
-		blob_index_to_merge : in unsigned(7 downto 0); -- input blob_index to merge
-		next_blob_index : out unsigned(7 downto 0); -- next available index
+		blob_index : in std_logic_vector(7 downto 0); -- input blob_index
+		blob_index_to_merge : in std_logic_vector(7 downto 0); -- input blob_index to merge
+		next_blob_index : out std_logic_vector(7 downto 0); -- next available index
 		add_pixel : in std_logic ; -- add pixel to blob
 		new_blob : in std_logic ; -- initializing new blob
 		merge_blob : in std_logic ; --merging two blobs
-		pixel_posx, pixel_posy : in unsigned(9 downto 0); -- position of the pixel to add to the blob
+		pixel_posx, pixel_posy : in std_logic_vector(9 downto 0); -- position of the pixel to add to the blob
 		
 		send_blobs : in std_logic ;
 		--memory_interface to copy results onpixel_in_vsync
@@ -83,6 +83,8 @@ signal blob_data_send_count : std_logic_vector(1 downto 0);
 signal already_merged : std_logic ;
 
 signal push_addr, pop_addr, en_free_addr_counter, fifo_empty : std_logic ;
+
+signal sraz : std_logic  ;
 begin
 
 
@@ -171,26 +173,26 @@ blob_to_merge_posy1 <= blob_to_merge_data(29 downto 20);
 blob_to_merge_posx0 <= blob_to_merge_data(19 downto 10);
 blob_to_merge_posy0 <= blob_to_merge_data(9 downto 0);
 
-add_pixel_posx0 <= std_logic_vector(pixel_posx) when pixel_posx < unsigned(current_blob_posx0) else
+add_pixel_posx0 <= std_logic_vector(pixel_posx) when pixel_posx < current_blob_posx0 else
 						 current_blob_posx0 ;
-add_pixel_posx1 <= std_logic_vector(pixel_posx) when pixel_posx > unsigned(current_blob_posx1) else
+add_pixel_posx1 <= std_logic_vector(pixel_posx) when pixel_posx > current_blob_posx1 else
 						 current_blob_posx1 ;
-add_pixel_posy0 <= std_logic_vector(pixel_posy) when pixel_posy < unsigned(current_blob_posy0) else
+add_pixel_posy0 <= std_logic_vector(pixel_posy) when pixel_posy < current_blob_posy0 else
 						 current_blob_posy0 ;
-add_pixel_posy1 <= std_logic_vector(pixel_posy) when pixel_posy > unsigned(current_blob_posy1) else
+add_pixel_posy1 <= std_logic_vector(pixel_posy) when pixel_posy > current_blob_posy1 else
 						 current_blob_posy1 ; 
 						 
 						 
-merge_posx0 <= std_logic_vector(pixel_posx) when pixel_posx < unsigned(current_blob_posx0) and pixel_posx < unsigned(blob_to_merge_posx0) else
+merge_posx0 <= std_logic_vector(pixel_posx) when pixel_posx < current_blob_posx0 and pixel_posx < blob_to_merge_posx0 else
 					blob_to_merge_posx0 when blob_to_merge_posx0 < current_blob_posx0 else
 					current_blob_posx0 ;
-merge_posx1 <= std_logic_vector(pixel_posx) when pixel_posx > unsigned(current_blob_posx1) and pixel_posx > unsigned(blob_to_merge_posx1) else
+merge_posx1 <= std_logic_vector(pixel_posx) when pixel_posx > current_blob_posx1 and pixel_posx > blob_to_merge_posx1 else
 					blob_to_merge_posx1 when blob_to_merge_posx1 > current_blob_posx1 else
 					current_blob_posx1 ;
-merge_posy0 <= std_logic_vector(pixel_posy) when pixel_posy < unsigned(current_blob_posy0) and pixel_posy < unsigned(blob_to_merge_posy0) else
+merge_posy0 <= std_logic_vector(pixel_posy) when pixel_posy < current_blob_posy0 and pixel_posy < blob_to_merge_posy0 else
 					blob_to_merge_posy0 when blob_to_merge_posy0 < current_blob_posy0 else
 					current_blob_posy0 ;
-merge_posy1 <= std_logic_vector(pixel_posy) when pixel_posy > unsigned(current_blob_posy1) and pixel_posy > unsigned(blob_to_merge_posy1) else
+merge_posy1 <= std_logic_vector(pixel_posy) when pixel_posy > current_blob_posy1 and pixel_posy > blob_to_merge_posy1 else
 					blob_to_merge_posy1 when blob_to_merge_posy1 > current_blob_posy1 else
 					current_blob_posy1 ;						 
 
@@ -226,7 +228,7 @@ next_free_index_pointer: simple_counter
            en => new_blob, 
            Q => slv_next_blob_index_tp
 			  );
-next_blob_index <= unsigned(slv_next_blob_index_tp);
+next_blob_index <= slv_next_blob_index_tp;
 
 next_free_addr_counter: simple_counter
 	 generic map(NBIT => 8 )
@@ -266,6 +268,9 @@ process(send_blobs, done_send, manager_state)
 				end if;
 	end case ;
 end process;
+
+sraz <= '1'  when manager_state = SEND and next_manager_state = TRACK else
+		  '0';
 
 blob_send_counter: simple_counter
 	 generic map(NBIT => 8 )
@@ -307,7 +312,9 @@ mem_data <= current_blob_data(15 downto 0) when blob_data_send_count = 0 else
 				current_blob_data(31 downto 16) when blob_data_send_count = 1 else
 				current_blob_data(47 downto 32) ;
 				
-mem_addr <= X"00" & blob_send_count ;
+mem_addr(9 downto 0) <= blob_send_count & blob_data_send_count;
+mem_addr(15 downto 10) <= (others => '0');
+
 
 mem_wr <= '1' when manager_state = SEND and blob_data_send_count < 3 else
 			 '0' ;

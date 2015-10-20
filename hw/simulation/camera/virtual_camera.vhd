@@ -51,8 +51,10 @@ port(
 end virtual_camera;
 
 architecture Behavioral of virtual_camera is
-
 type INTF is file of integer ;
+
+signal temp_hsync, temp_vsync, temp_pixel_clock : std_logic ;
+signal pixel_data_temp : std_logic_vector(7 downto 0);
 begin
 
 read_file:
@@ -62,23 +64,23 @@ read_file:
     begin
 		image := pgm_read(IMAGE_PATH);
       loop EXIT WHEN line_count = (HEIGHT+37);
-				pixel_out_clk <= '0';
+				temp_pixel_clock <= '0';
 				if px_count < WIDTH and line_count > 25 and line_count < (HEIGHT+26) then
-					pixel_out_hsync <= '0' ;					
-					pixel_data <= std_logic_vector(to_unsigned(image.all(px_count,line_count - 26), 8)) ;
+					temp_hsync <= '0' ;					
+					pixel_data_temp <= std_logic_vector(to_unsigned(image.all(px_count,line_count - 26), 8)) ;
 				else
-						pixel_out_hsync <= '1' ;
+						temp_hsync <= '1' ;
 				end if ;
 				
 
 				if line_count < 3 then
-					pixel_out_vsync <= '1' ;
+					temp_vsync <= '1' ;
 				 else 
-					pixel_out_vsync <= '0' ;
+					temp_vsync <= '0' ;
 				end if ;
 				wait for PERIOD/2;
 				
-				pixel_out_clk <= '1';
+				temp_pixel_clock <= '1';
 				if (px_count = (WIDTH+155) ) then
 					px_count := 0 ;
 					if (line_count > (HEIGHT+37)) then
@@ -99,6 +101,22 @@ read_file:
 		
       wait; -- one shot at time zero,
     end process read_file;
+	 
+	 
+	 clk_domain_latch : process(clk, resetn)
+	 begin
+	 if resetn = '0' then
+		pixel_out_hsync <= '1' ;
+		pixel_out_vsync <= '1' ;
+		pixel_out_clk <= '0' ;
+		pixel_data <= (others => '0');
+	 elsif rising_edge(clk) then
+		pixel_out_clk <= temp_pixel_clock ;
+		pixel_out_hsync <= temp_hsync ;
+		pixel_out_vsync <= temp_vsync ;
+		pixel_data <= pixel_data_temp ;
+	 end if ;
+	 end process ;
 
 
 end Behavioral;

@@ -17,15 +17,15 @@ component blobs is
 	generic(NB_BLOB : positive := 32);
 	port(
 		clk, resetn, sraz : in std_logic ; --standard signals
-		blob_index : in unsigned(7 downto 0); -- blob index to madd/merge with
-		next_blob_index : out unsigned(7 downto 0); -- available index
-		blob_index_to_merge : in unsigned(7 downto 0); -- the blob index to merge
-		true_blob_index : out unsigned(7 downto 0); -- blob index after merge
+		blob_index : in std_logic_vector(7 downto 0); -- blob index to madd/merge with
+		next_blob_index : out std_logic_vector(7 downto 0); -- available index
+		blob_index_to_merge : in std_logic_vector(7 downto 0); -- the blob index to merge
+		true_blob_index : out std_logic_vector(7 downto 0); -- blob index after merge
 		add_pixel : in std_logic ; -- add pixel to blob
 		new_blob : in std_logic ; -- getting new blob
 		
 		merge_blob : in std_logic ; -- merge blob at blob index with blob index
-		pixel_posx, pixel_posy : in unsigned(9 downto 0); -- position of the pixel to add to the blob
+		pixel_posx, pixel_posy : in std_logic_vector(9 downto 0); -- position of the pixel to add to the blob
 		
 		
 		--output interface
@@ -56,15 +56,15 @@ end component;
 component blob_manager is
 generic(NB_BLOB : positive := 32);
 	port(
-		clk, resetn, sraz : in std_logic ; --standard signals
+		clk, resetn : in std_logic ; --standard signals
 		blob_class : in std_logic_vector(7 downto 0);
-		blob_index : in unsigned(7 downto 0); -- input blob_index
-		blob_index_to_merge : in unsigned(7 downto 0); -- input blob_index to merge
-		next_blob_index : out unsigned(7 downto 0); -- next available index
+		blob_index : in std_logic_vector(7 downto 0); -- input blob_index
+		blob_index_to_merge : in std_logic_vector(7 downto 0); -- input blob_index to merge
+		next_blob_index : out std_logic_vector(7 downto 0); -- next available index
 		add_pixel : in std_logic ; -- add pixel to blob
 		new_blob : in std_logic ; -- initializing new blob
 		merge_blob : in std_logic ; --merging two blobs
-		pixel_posx, pixel_posy : in unsigned(9 downto 0); -- position of the pixel to add to the blob
+		pixel_posx, pixel_posy : in std_logic_vector(9 downto 0); -- position of the pixel to add to the blob
 		
 		send_blobs : in std_logic ;
 		--memory_interface to copy results onpixel_in_vsync

@@ -40,6 +40,15 @@ ARCHITECTURE behavior OF blob_detection_tb IS
  
     -- Component Declaration for the Unit Under Test (UUT)
  
+	component virtual_camera is
+	generic(IMAGE_PATH : string ; PERIOD : time := 10ns);
+	port(
+		clk : in std_logic; 
+		resetn : in std_logic; 
+		pixel_data : out std_logic_vector(7 downto 0 ); 
+		pixel_out_clk, pixel_out_hsync, pixel_out_vsync : out std_logic );
+	end component;
+ 
     COMPONENT blob_detection
 	 GENERIC(LINE_SIZE : natural := 640);
     PORT(
@@ -57,15 +66,49 @@ ARCHITECTURE behavior OF blob_detection_tb IS
         );
     END COMPONENT;
     
-	constant clk_period : time := 5 ns ;
+	constant clk_period : time := 10 ns ;
 	constant pclk_period : time := 40 ns ;
 	
 	signal clk, resetn : std_logic ;
-	signal pxclk,pixel_in_hsync,pixel_in_vsync, send_blob : std_logic ;
-	signal pixel, blob_data : std_logic_vector(7 downto 0 ) := (others => '0');
+	signal pixel_in_clk,pixel_in_hsync,pixel_in_vsync, send_blob : std_logic ;
+	signal pixel_in_data, blob_data : std_logic_vector(7 downto 0 ) := (others => '0');
 	signal px_count, line_count, byte_count : integer := 0 ;
+	
+	signal posx_0, posy_0 : std_logic_vector(9 downto 0);
+	signal posx_1, posy_1 : std_logic_vector(9 downto 0);
+	signal blob_label : std_logic_vector(7 downto 0);
+
+	
+	signal mem_addr, mem_data : std_logic_vector(15 downto 0);
+	signal mem_wr : std_logic ;
  
 BEGIN
+
+	main_clk : process
+	begin
+		clk <= '1' ;
+		wait for clk_period/2 ;
+		clk <= '0';
+		wait for clk_period/2 ;
+	end process ;
+	
+	main_reset : process
+	begin
+		resetn <= '0' ;
+		wait for pclk_period * 100;
+		resetn <= '1' ;
+		wait ;
+	end process ;
+ 
+	cam0 : virtual_camera
+	generic map(IMAGE_PATH => "/home/jpiat/Pictures/blob_test.pgm", PERIOD => pclk_period)
+	port map(
+		clk => clk,
+		resetn => resetn,
+		pixel_data =>  pixel_in_data,
+		pixel_out_clk => pixel_in_clk,
+		pixel_out_hsync =>pixel_in_hsync ,
+		pixel_out_vsync =>pixel_in_vsync);
  
 	-- Instantiate the Unit Under Test (UUT)
    uut: blob_detection
@@ -73,70 +116,37 @@ BEGIN
 		PORT MAP (
           clk => clk,
           resetn => resetn,
-          pixel_in_clk => pxclk,
+          pixel_in_clk => pixel_in_clk,
          pixel_in_hsync =>pixel_in_hsync,
          pixel_in_vsync =>pixel_in_vsync,
-          pixel_in_data => pixel,
-			 blob_data => blob_data
+          pixel_in_data => pixel_in_data,
+			 blob_data => blob_data,
+			 mem_addr => mem_addr,
+			mem_data => mem_data , 
+			mem_wr => mem_wr
         );
 
-	process
+	mem_proc : process(clk)
 	begin
-		resetn <= '0' ;
-		wait for 10*clk_period;
-		resetn <= '1' ;
-		while true loop
-			clk <= '0';
-			wait for clk_period;
-			clk <= '1';
-			wait for clk_period; 
-		end loop ;
-	end process;
-	
-process
-	begin
-		pxclk <= '0';
-		if px_count < 320 and line_count >= 20 and line_count < 257 then
-				hsync <= '0' ;
-		else
-				hsync <= '1' ;
+		if rising_edge(clk) then
+			if mem_wr = '1' then
+				if mem_addr = 0 then
+					posy_0 <= mem_data(9 downto 0);
+					posx_0(5 downto 0) <= mem_data(15 downto 10);
+				end if ;
+				
+				if mem_addr = 1 then
+					posy_1 <= mem_data(13 downto 4);
+					posx_1(1 downto 0) <= mem_data(15 downto 14);
+					posx_0(9 downto 6) <= mem_data(3 downto 0);
+				end if ;
+				
+				if mem_addr = 2 then
+					posx_1(9 downto 2) <= mem_data(7 downto 0);
+					blob_label <= mem_data(15 downto 8);
+				end if ;
+			end if; 
 		end if ;
-
-		if line_count < 3 then
-			vsync <= '1' ;
-		 else 
-			vsync <= '0' ;
-		end if ;
-		wait for pclk_period;
-		
-		pxclk <= '1';
-		if (px_count = 460 ) then
-			px_count <= 0 ;
-			if (line_count > 270) then
-			   line_count <= 0;
-		  else
-		    line_count <= line_count + 1 ;
-		  end if ;
-		else
-		  px_count <= px_count + 1 ;
-		end if ;
-		
-		wait for pclk_period;
-
-	end process;
-
---pixel <= X"FF" when line_count < 100 and line_count > 50 and  px_count  < 400 and  px_count  > 200 else
---			X"00" ;
-			
---pixel <= X"FF" when px_count < 100 and line_count < 240 else
---			X"00" ;
-
---pixel <= X"FF" when line_count < 100  and  px_count  >= 250 else
---			X"00" ;
-			
-pixel <= X"FF" when line_count < 100  and  px_count  >= 250 else
-			X"FF" when line_count >= 100  and  px_count  <= 250 else
-			X"00" ;
-
+	end process ;
 
 END;

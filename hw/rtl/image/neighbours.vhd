@@ -42,7 +42,7 @@ entity neighbours is
 			clk : in std_logic; 
 			resetn, sraz : in std_logic; 
 			pixel_in_clk,pixel_in_hsync,pixel_in_vsync : in std_logic; 
-			neighbour_in : in unsigned(7 downto 0 );
+			pixel_in_data : in std_logic_vector(7 downto 0 );
 			neighbours : out pix_neighbours);
 end neighbours;
 
@@ -52,7 +52,7 @@ signal sraz_read_pixel_index, en_read_pixel_index, sraz_write_pixel_index : std_
 signal line_count : std_logic_vector(nbit(HEIGHT)-1 downto 0);
 signal pixel_counter_dec, pixel_counter : std_logic_vector(nbit(WIDTH)-1 downto 0);
 signal neighbours_buffer : pix_neighbours ;
-signalpixel_in_hsync_re,pixel_in_hsync_old : std_logic ;
+signal pixel_in_hsync_re,pixel_in_hsync_old : std_logic ;
 signal pixel_in_clk_re, pixel_in_clk_old : std_logic ;
 signal output_neighbour : std_logic_vector(7 downto 0);
 begin
@@ -65,7 +65,7 @@ lines0: dpram_NxN
  		we => pixel_in_clk_re ,
 		dpo => output_neighbour,
 		dpra => pixel_counter_dec,
- 		di => std_logic_vector(neighbour_in),
+ 		di => pixel_in_data,
  		a => pixel_counter
 	); 
 
@@ -85,7 +85,7 @@ read_pixel_index0 : simple_counter
 
 sraz_read_pixel_index <= '1' when pixel_counter_dec = (WIDTH-1) and pixel_in_clk_re = '1' else
 							    '0' ;	
-en_read_pixel_index <= pixel_in_clk_re whenpixel_in_hsync = '0' else
+en_read_pixel_index <= pixel_in_clk_re when pixel_in_hsync = '0' else
 							  '0' ;
 	
 write_pixel_index0 : simple_counter 
@@ -100,7 +100,7 @@ write_pixel_index0 : simple_counter
 			  );
 
 sraz_write_pixel_index <= pixel_in_clk_re when pixel_counter = (WIDTH-1) else
-								  '1' whenpixel_in_hsync =  '1' else -- should coincide ...
+								  '1' when pixel_in_hsync =  '1' else -- should coincide ...
 							     '0' ;
 	
 line_counter : simple_counter 
@@ -117,14 +117,14 @@ line_counter : simple_counter
 process(clk, resetn)
 begin
 if resetn = '0' then 
-	hsync_old <= '0' ;
+	pixel_in_hsync_old <= '0' ;
 	pixel_in_clk_old <= '0' ;
 elsif clk'event and clk = '1' then
-	hsync_old <=pixel_in_hsync ;
+	pixel_in_hsync_old <=pixel_in_hsync ;
 	pixel_in_clk_old <= pixel_in_clk ;
 end if ;
 end process ;		
-hsync_re <= (NOTpixel_in_hsync_old) ANDpixel_in_hsync ;
+pixel_in_hsync_re <= (NOT pixel_in_hsync_old) AND pixel_in_hsync ;
 pixel_in_clk_re <= (NOT pixel_in_clk_old) and pixel_in_clk ;
 		
 process(clk, resetn)
@@ -138,8 +138,8 @@ elsif clk'event and clk = '1' then
 	if pixel_in_clk_re = '1' then
 		neighbours_buffer(0) <= neighbours_buffer(1);
 		neighbours_buffer(1) <= neighbours_buffer(2);
-		neighbours_buffer(2) <= unsigned(output_neighbour);
-		neighbours_buffer(3) <= unsigned(neighbour_in);
+		neighbours_buffer(2) <= output_neighbour;
+		neighbours_buffer(3) <= pixel_in_data;
 	end if ;
 end if ;
 end process;			

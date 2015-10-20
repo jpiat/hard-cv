@@ -37,7 +37,7 @@ type imat3 is array (0 to 2) of irow3;
 
 type duplet is array (0 to 1) of integer range 0 to 3;
 type index_array is array (0 to 8) of duplet ;
-type pix_neighbours is array (0 to 3) of unsigned(7 downto 0);
+type pix_neighbours is array (0 to 3) of std_logic_vector(7 downto 0);
 
 type y_pixel_bus is
 record
@@ -146,7 +146,7 @@ component neighbours is
 			clk : in std_logic; 
 			resetn, sraz : in std_logic; 
 			pixel_in_clk, pixel_in_hsync, pixel_in_vsync : in std_logic; 
-			pixel_in_data : in unsigned(7 downto 0 );
+			pixel_in_data : in std_logic_vector(7 downto 0 );
 			neighbours : out pix_neighbours);
 end component;
 
